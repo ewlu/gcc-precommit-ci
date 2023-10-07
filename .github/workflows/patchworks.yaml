@@ -35,7 +35,7 @@ jobs:
       - name: Get timestamps and make directories
         run: |
           TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
-          python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }}
+          python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci
           START_TIME=$(cat date_cur.txt)
           TZ=UTC date -d "@$((($(date -d $START_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
           TZ=UTC date -d "@$((($(date -d $START_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
