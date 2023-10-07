@@ -37,6 +37,7 @@ jobs:
       - name: Clone riscv-gnu-toolchain
         working-directory: ./
         run: |
+          rm -rf riscv-gnu-toolchain
           git clone https://github.com/patrick-rivos/riscv-gnu-toolchain.git
           cd riscv-gnu-toolchain
           git checkout ${{ steps.riscv_gnu_toolchain_hash.outputs.riscv_gnu_toolchain_hash }}
