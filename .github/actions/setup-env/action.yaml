@@ -1,0 +1,31 @@
+name: "Setup Env"
+description: "Sets up the environment"
+inputs:
+  riscv_gnu_toolchain_hash:
+    required: true
+  free_up_space:
+    description: 'Do (or dont) free up space by deleting unused libraries. Defaults to false'
+    required: false
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+      - name: Initialize riscv-gnu-toolchain
+        shell: bash
+        working-directory: ./
+        run: |
+          rm -rf riscv-gnu-toolchain
+          git clone https://github.com/patrick-rivos/riscv-gnu-toolchain.git
+          cd riscv-gnu-toolchain && git checkout ${{ inputs.riscv_gnu_toolchain_hash }}
+
+      - name: Remove unneeded frameworks to recover disk space
+        shell: bash
+        if: inputs.free_up_space == 'true'
+        run: |
+          echo "-- Before --"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          echo "-- After --"
+          df -h

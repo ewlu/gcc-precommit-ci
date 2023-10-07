@@ -1,0 +1,351 @@
+name: Generate-Summary
+
+on:
+  workflow_call:
+    inputs:
+      patch_name:
+        required: true
+        type: string
+      gcchash:
+        required: true
+        type: string
+      new_gcchash:
+        required: true
+        type: string
+      build_only:
+        required: true
+        type: string
+      tot_hash:
+        required: true
+        type: string
+      riscv_gnu_toolchain_hash:
+        required: true
+        type: string
+  workflow_dispatch:
+    branches:
+      - patchworks-ci
+    inputs:
+      gcchash:
+        description: 'GCC Hash'
+        required: true
+      new_gcchash:
+        description: 'GCC Hash of applied commit'
+        required: true
+      patch_name:
+        description: 'Patch name to regenerate summary for'
+        required: true
+      riscv_gnu_toolchain_hash:
+        description: 'Hash of riscv-gnu-toolchain'
+        required: true
+
+jobs:
+  compare-artifacts:
+    if: always() # ensure comparison always runs even on error
+    runs-on: ubuntu-20.04
+    environment: production
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Check workflow dispatch
+        id: dispatch
+        if: ${{ inputs.tot_hash == '' }} # tot_hash always set at apply tip of tree step in run_checks.yaml
+        run: |
+          echo "workflow_dispatch=true" >> $GITHUB_OUTPUT
+
+      - name: Retrieve cache
+        id: retrieve-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            riscv-gnu-toolchain/.git
+            riscv-gnu-toolchain/binutils
+            riscv-gnu-toolchain/dejagnu
+            riscv-gnu-toolchain/gcc
+            riscv-gnu-toolchain/gdb
+            riscv-gnu-toolchain/glibc
+            riscv-gnu-toolchain/musl
+            riscv-gnu-toolchain/newlib
+            riscv-gnu-toolchain/pk
+            riscv-gnu-toolchain/qemu
+          key: submodules-archive-5
+
+      - name: Initalize gcc
+        if: steps.retrieve-cache.outputs.cache-hit != 'true'
+        run: |
+          rm -rf gcc
+          git clone git://gcc.gnu.org/git/gcc.git
+
+      - name: Pull gcc
+        id: gcc-hash
+        run: |
+          cd gcc
+          git checkout master
+          git pull
+
+      - name: Create directories
+        run: |
+          mkdir current_logs
+          mkdir temp
+          mkdir summaries
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+
+      - name: Download baseline results
+        run: |
+          pip install pygithub==1.59.1 requests
+          python ./scripts/download_artifact.py -name ${{ inputs.gcchash }}-current-logs -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+
+      - name: Extract baseline results
+        run: |
+          mv ./temp/current_logs.zip .
+          unzip current_logs.zip
+          mv current_logs previous_logs
+
+      # Download all workload artifacts
+
+      - name: Print API usage info
+        run: |
+          curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/rate_limit
+
+      - name: Download All targets
+        if: ${{ steps.dispatch.outputs.workflow_dispatch == 'true' }}
+        uses: ./.github/actions/download-all-comparison-artifacts
+        with:
+          gcchash: ${{ inputs.new_gcchash }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: 'ewlu/gcc-precommit-ci'
+
+      - name: Download All targets
+        if: ${{ steps.dispatch.outputs.workflow_dispatch == '' }}
+        uses: ./.github/actions/download-all-comparison-artifacts
+        with:
+          gcchash: ${{ inputs.new_gcchash }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: 'patrick-rivos/gcc-postcommit-ci'
+
+      - name: Print API usage info
+        run: |
+          curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/rate_limit
+
+      - name: Extract artifacts
+        run: |
+          ls ./temp/
+          mkdir -p current_logs
+          for f in $(ls ./temp/*report.zip); do
+            unzip $f -d ./current_logs || true
+          done
+          ls current_logs
+
+      - name: Compare artifacts
+        run: |
+          python ./scripts/compare_all_artifacts.py -hash ${{ inputs.new_gcchash }}
+
+      - name: Remove testsuite failures on build-only
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          rm current_logs/failed_testsuite.txt
+        continue-on-error: true
+
+      - name: Make artifact zips
+        run: |
+          zip -r summaries.zip summaries
+          zip -r current_logs.zip current_logs
+          zip -r previous_logs.zip previous_logs
+
+      - name: Upload compare summaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.gcchash }}-summaries
+          path: |
+            riscv-gnu-toolchain/summaries.zip
+          retention-days: 90
+
+      - name: Upload current log failures
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.gcchash }}-current-logs
+          path: |
+            riscv-gnu-toolchain/current_logs.zip
+          retention-days: 90
+
+      - name: Upload baseline results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.gcchash }}-previous-logs
+          path: |
+            riscv-gnu-toolchain/previous_logs.zip
+          retention-days: 90
+
+    outputs:
+      gcchash: ${{ inputs.gcchash }}
+      workflow_dispatch: ${{ steps.dispatch.outputs.workflow_dispatch }}
+
+  generate-issues:
+    if: always() # ensure generate issues always runs even on error
+    needs: [compare-artifacts]
+    runs-on: ubuntu-20.04
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Download summaries artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.compare-artifacts.outputs.gcchash }}-summaries
+          path: ./riscv-gnu-toolchain
+
+      - name: Download current logs artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.compare-artifacts.outputs.gcchash }}-current-logs
+          path: ./riscv-gnu-toolchain
+
+      - name: Download previous logs artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.compare-artifacts.outputs.gcchash }}-previous-logs
+          path: ./riscv-gnu-toolchain
+
+      - name: Download patches artifact
+        if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography pygithub==1.59.1 requests
+          mkdir temp
+          python ./scripts/download_artifact.py -name ${{ inputs.patch_name }}-downloaded-patches -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp -repo ewlu/gcc-precommit-ci
+          ls temp
+          unzip temp/${{ inputs.patch_name }}-downloaded-patches
+
+      - name: Download patches artifact
+        if: ${{ needs.compare-artifacts.outputs.workflow_dispatch != 'true' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Print API usage info
+        run: |
+          curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/rate_limit
+
+      - name: Aggregate information
+        run: |
+          unzip summaries.zip
+          unzip current_logs.zip
+          unzip previous_logs.zip
+          python ./scripts/aggregate.py \
+            -chash ${{ inputs.new_gcchash }} \
+            -patch ${{ inputs.patch_name }} \
+            -o issue.md
+          cat issue.md
+
+      - name: Print API usage info
+        run: |
+          curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/rate_limit
+
+      - name: Trim issue length # reduce the number of lines in final issue so github always creates issue
+        run: |
+          head -c 64000 issue.md > trimmed_issue.md
+          if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
+          run_id=${{ github.run_id }} && echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/$run_id" >> trimmed_issue.md
+          cat trimmed_issue.md
+
+      - name: Update issue with tot hash
+        if: ${{ inputs.build_only }}
+        run: |
+          echo "Failed to apply ${{ inputs.patch_name }} cleanly to baseline hash ${{ inputs.gcchash }}. Patch applied cleanly to then tip-of-tree hash ${{ inputs.tot_hash }}" >> trimmed_issue.md
+          cat trimmed_issue.md
+
+      - name: Update issue with associated patches
+        run: |
+          head -n 3 patches/${{ inputs.patch_name }} >> trimmed_issue.md
+          cat trimmed_issue.md
+
+      - name: Create or update summary issue
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/trimmed_issue.md
+          update_existing: true
+
+      - name: Output issue labels
+        id: issue-labels
+        run: |
+          export LABELS=$(cat labels.txt)
+          echo "issue_labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Add Build-Only Label to New Issue
+        if: ${{ inputs.build_only }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ steps.create-issue.outputs.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['build-only']
+            })
+
+      - name: Report Failure
+        if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'build-failure') || contains(steps.issue-labels.outputs.issue_labels, 'testsuite-failure') || contains(steps.issue-labels.outputs.issue_labels, 'new-regressions') }}
+        id: report-failure
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing failed' -iid ${{ steps.create-issue.outputs.number }} -state 'fail' -context 'test' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Report Warning
+        if: ${{ steps.report-failure.outcome == 'skipped' && inputs.build_only == 'true' }}
+        id: report-warning
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Build only. No tests ran' -iid ${{ steps.create-issue.outputs.number }} -state 'warning' -context 'test' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Report Success
+        if: ${{ steps.report-failure.outcome == 'skipped' && steps.report-warning.outcome == 'skipped' }}
+        id: report-success
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing passed' -iid ${{ steps.create-issue.outputs.number }} -state 'success' -context 'test' -token 'PLACEHOLDER'
+        continue-on-error: true

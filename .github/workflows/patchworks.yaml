@@ -1,0 +1,113 @@
+name: Patchworks
+
+on:
+  schedule:
+    # Run every 15 minutes offset by 7 to try to avoid github's high-load times
+    # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
+    - cron: 7,22,37,52 * * * *
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    branches:
+      - main
+    inputs:
+      timestamp:
+        description: 'Patch Timestamp (UTC)'
+        required: true
+
+jobs:
+  fetch_patches:
+    # Might need to set up a dedicated self hosted runner to always run this on time
+    runs-on: [self-hosted, ping]
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Get timestamps and make directories
+        run: |
+          TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
+          python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }}
+          START_TIME=$(cat date_cur.txt)
+          TZ=UTC date -d "@$((($(date -d $START_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
+          TZ=UTC date -d "@$((($(date -d $START_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
+
+          echo $START_TIME
+          cat date_older.txt
+          cat date_old.txt
+          cat date_recent.txt
+
+          cat runs.log
+
+          mkdir patch_urls
+          mkdir patchworks_urls
+
+      - name: Update times for workflow dispatch
+        if: ${{ inputs.timestamp != '' }}
+        run: |
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 450) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 450) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1350) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
+
+      - name: Get list of new patches
+        run: |
+          python scripts/create_patches_files.py -backup $(cat date_older.txt) -start $(cat date_old.txt) -end $(cat date_recent.txt)
+
+      - name: List patch artifacts
+        id: list_patches
+        run: |
+          export PATCHLIST="$(cat artifact_names.txt)"
+          echo "patch_list=$PATCHLIST" >> $GITHUB_OUTPUT
+
+      - name: Make artifact zip
+        run: |
+          zip -r patch_files.zip patch_urls
+          zip -r patchworks_files.zip patchworks_urls
+
+      - name: Upload patch urls zip
+        if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: patch_urls
+          path: |
+            riscv-gnu-toolchain/patch_files.zip
+          retention-days: 90
+
+      - name: Upload patchworks urls zip
+        if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: patchworks_urls
+          path: |
+            riscv-gnu-toolchain/patchworks_files.zip
+          retention-days: 90
+
+    outputs:
+      list_of_patch_names: ${{ steps.list_patches.outputs.patch_list }}
+
+  init-submodules:
+    needs: [fetch_patches]
+    if: ${{ needs.fetch_patches.outputs.list_of_patch_names != '[]' }}
+    uses: ./.github/workflows/init-submodules.yaml
+
+  patch_matrix:
+    needs: [fetch_patches, init-submodules]
+    strategy:
+      fail-fast: false
+      matrix:
+        patch_name: ${{ fromJSON(needs.fetch_patches.outputs.list_of_patch_names) }}
+    uses: ./.github/workflows/run_checks.yaml
+    permissions:
+      issues: write
+    with:
+      patch_name: ${{ matrix.patch_name }}
+      gcchash: ${{ needs.init-submodules.outputs.gcchash }}
+      riscv_gnu_toolchain_hash: ${{ needs.init-submodules.outputs.riscv_gnu_toolchain_hash }}

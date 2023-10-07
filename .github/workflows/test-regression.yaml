@@ -1,0 +1,718 @@
+name: Test-Regression
+
+on:
+  workflow_call:
+    inputs:
+      patch_name:
+        required: true
+        type: string
+      mode:
+        required: true
+        type: string
+      target:
+        required: true
+        type: string
+      gcchash:
+        required: true
+        type: string
+      new_gcchash:
+        required: true
+        type: string
+      multilib:
+        required: true
+        type: string
+      build_only:
+        required: true
+        type: string
+      run_on_self_hosted:
+        required: true
+        type: string
+      riscv_gnu_toolchain_hash:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    environment: production
+    if: ${{ inputs.run_on_self_hosted != 'true' }}
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: true
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.gcchash }}
+
+      - name: Checkout gcc hash
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          cd gcc
+          git reset --hard origin/master
+          git pull origin master
+
+      - name: Apply patches
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix --3way
+          echo $(git rev-parse HEAD)
+
+      - name: Install dependencies
+        run: sudo ./.github/setup-apt.sh
+
+      - name: Update pending issue
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Create build report issue
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report build
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          if [ "${{ inputs.multilib }}" == "multilib" ]; then
+            ../configure --prefix=$(pwd) --enable-multilib --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          else
+            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+          fi
+
+      - name: Make log name
+        id: build-log
+        run: |
+          export BUILD_LOG_NAME=$(tail -n 1 patches/${{ inputs.patch_name }})-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}-build-log
+          echo "build_log_name=$BUILD_LOG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Make gcc
+        id: build-gcc
+        run: |
+          cd build
+          set -o pipefail
+          make -j $(nproc) ${{ inputs.mode }} 2>&1 | tee ${{ steps.build-log.outputs.build_log_name }}.txt
+
+      - name: Build success report
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Zip build log
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          zip ${{ steps.build-log.outputs.build_log_name }}.zip build/${{ steps.build-log.outputs.build_log_name }}.txt
+
+      - name: Upload build log
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.build-log.outputs.build_log_name }}
+          path: |
+            riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
+          retention-days: 90
+
+      - name: Build failure report
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Update build report issue
+        uses: JasonEtco/create-an-issue@v2
+        if: ${{ always() }}
+        id: update-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report error on build-failure
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid ${{ steps.update-issue.outputs.number }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Remove sources to reclaim disk space
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+
+      - name: Zip binaries
+        run: |
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip build/bin
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip
+          retention-days: 5
+
+      # Running testsuite (stamps/check-gcc-*) only uses stage2 & assorted folders
+      - name: Zip stage2
+        run: |
+          zip --symlinks -r stage2.zip build
+
+      - name: Upload stage2 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-stage2
+          path: |
+            riscv-gnu-toolchain/stage2.zip
+          retention-days: 5
+
+      - name: Output success
+        id: build-success
+        run: |
+          export BUILD_SUCCESS="success"
+          echo $BUILD_SUCCESS
+          echo "build_success=$BUILD_SUCCESS" >> "$GITHUB_OUTPUT"
+
+      - name: Report build success
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid ${{ steps.update-issue.outputs.number }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+    outputs:
+      build_success: ${{ steps.build-success.outputs.build_success }}
+
+  test:
+    runs-on: ubuntu-20.04
+    environment: production
+    needs: [build]
+    # Skip linux multilib
+    if: ${{ inputs.build_only != 'true' && inputs.run_on_self_hosted != 'true' }}
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: true
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.gcchash }}
+
+      - name: Apply patches to baseline
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix --3way
+          echo $(git rev-parse HEAD)
+
+      - name: Install dependencies
+        run: sudo ./.github/setup-apt.sh
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          if [ "${{ inputs.multilib }}" == "multilib" ]; then
+            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          else
+            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+          fi
+
+      - name: Restore stage2
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-stage2
+          path: ./riscv-gnu-toolchain
+
+      - name: Unzip artifacts
+        run: |
+          unzip -n stage2.zip
+          rm -rf stage2.zip
+
+      # We need to use future timestamps since some stamps are generated during build process and invalidate the stamps here.
+      # Future timestamps prevent that invalidation.
+      - name: Generate fake stamps to prevent rebuilding
+        run: |
+          mkdir -p build/stamps
+          cd build/stamps
+          touch -d "+2 days" check-write-permission
+          touch -d "+2 days" build-gdb-${{ inputs.mode }}
+          touch -d "+2 days" build-binutils-${{ inputs.mode }}
+          touch -d "+2 days" build-linux-headers
+          touch -d "+2 days" build-gcc-${{ inputs.mode }}-stage1
+          touch -d "+2 days" build-glibc-linux-headers
+          touch -d "+2 days" build-glibc-linux-rv32gc-ilp32d
+          touch -d "+2 days" build-glibc-linux-rv32imac-ilp32
+          touch -d "+2 days" build-glibc-linux-rv32imafdc-ilp32d
+          touch -d "+2 days" build-glibc-linux-rv32gcv-ilp32d
+          touch -d "+2 days" build-glibc-linux-rv32gc_zba_zbb_zbc_zbs-ilp32d
+          touch -d "+2 days" build-glibc-linux-rv32gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-ilp32d
+          touch -d "+2 days" build-glibc-linux-rv64gc-lp64d
+          touch -d "+2 days" build-glibc-linux-rv64imac-lp64
+          touch -d "+2 days" build-glibc-linux-rv64imafdc-lp64d
+          touch -d "+2 days" build-glibc-linux-rv64gcv-lp64d
+          touch -d "+2 days" build-glibc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d
+          touch -d "+2 days" build-glibc-linux-rv64gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-lp64d
+          touch -d "+2 days" build-glibc-linux-rv64imafdcv_zicond_zawrs_zbc_zvkng_zvksg_zvbb_zvbc_zicsr_zba_zbb_zbs_zicbom_zicbop_zicboz_zfhmin_zkt-lp64d
+          touch -d "+2 days" build-newlib-nano
+          touch -d "+2 days" build-${{ inputs.mode }}
+          touch -d "+2 days" merge-newlib-nano
+          touch -d "+2 days" build-gcc-${{ inputs.mode }}-stage2
+
+      # Checks that the cache has been properly setup (make doesn't try rebuilding)
+      - name: Build sanity check (should be instant)
+        run: |
+          cd build
+          make -d ${{ inputs.mode }}
+
+      - name: Report testing
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'testing start' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Reinstall stage2
+        run: |
+          cd build
+          cd build-gcc-${{ inputs.mode }}-stage2
+          make install
+
+      - name: Run testsuite
+        run: |
+          cd build
+          make -j $(nproc) report-${{ inputs.mode }} || true
+
+      - name: Build debug log zip
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          else
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          fi
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+
+      - name: Upload debug artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          retention-days: 90
+
+      - name: Save results
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc newlib test/allowlist `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          else
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          fi
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          retention-days: 90
+
+  # The self-hosted environment does not have the same path setup as the hosted runners
+  # We need to rebuild since restoring the artifact won't work
+  # (the new path will break the existing build).
+  rerun-timeouts:
+    runs-on: [self-hosted, build]
+    environment: production
+    needs: [build, test]
+    if: ${{ failure() && needs.build.outputs.build_success == 'success' && inputs.run_on_self_hosted != 'true' }}
+    timeout-minutes: 1440 # 24 hours
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.gcchash }}
+
+      - name: Apply patches to baseline
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix --3way
+          echo $(git rev-parse HEAD)
+
+      - name: Install dependencies
+        run: |
+          sudo ./.github/setup-apt.sh
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          if [ "${{ inputs.multilib }}" == "multilib" ]; then
+            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          else
+            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+          fi
+
+      - name: Build
+        run: |
+          cd build
+          make ${{ inputs.mode }} -j $(nproc)
+
+      - name: Run testsuite
+        run: |
+          cd build
+          make -j $(nproc) report-${{ inputs.mode }} || true
+
+      - name: Build debug log zip
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          else
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          fi
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+
+      - name: Upload debug artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          retention-days: 90
+
+      - name: Save results
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc newlib test/allowlist `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          else
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          fi
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          retention-days: 90
+
+  # The self-hosted environment does not have the same path setup as the hosted runners
+  # We need to rebuild since restoring the artifact won't work
+  # (the new path will break the existing build).
+  run-on-self-hosted:
+    runs-on: [self-hosted, build]
+    environment: production
+    if: ${{ inputs.run_on_self_hosted == 'true' }}
+    timeout-minutes: 1440 # 24 hours
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.gcchash }}
+
+      - name: Apply patches to baseline
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix --3way
+          echo $(git rev-parse HEAD)
+
+      - name: Install dependencies
+        run: |
+          sudo ./.github/setup-apt.sh
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+
+      - name: Create pending issue
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Create apply report issue
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report build
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          if [ "${{ inputs.multilib }}" == "multilib" ]; then
+            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          else
+            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+          fi
+
+      - name: Make log name
+        id: build-log
+        run: |
+          export BUILD_LOG_NAME=$(tail -n 1 patches/${{ inputs.patch_name }})-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}-build-log
+          echo "build_log_name=$BUILD_LOG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build
+        id: build-gcc
+        run: |
+          cd build
+          set -o pipefail
+          make -j $(nproc) ${{ inputs.mode }} 2>&1 | tee ${{ steps.build-log.outputs.build_log_name }}.txt
+
+      - name: Build success report
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Zip build log
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          zip ${{ steps.build-log.outputs.build_log_name }}.zip build/${{ steps.build-log.outputs.build_log_name }}.txt
+
+      - name: Upload build log
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.build-log.outputs.build_log_name }}
+          path: |
+            riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
+          retention-days: 9
+
+      - name: Build failure report
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Create apply report issue
+        uses: JasonEtco/create-an-issue@v2
+        if: ${{ always() }}
+        id: update-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report error on build-failure
+        if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build failure' -iid ${{ steps.update-issue.outputs.number }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
+
+      - name: Report build success
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build success' -iid ${{ steps.update-issue.outputs.number }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
+
+      - name: Zip binaries
+        run: |
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip build/bin
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip
+          retention-days: 5
+
+      - name: Report testing
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
+
+      - name: Run testsuite
+        if: ${{ inputs.build_only != 'true' }}
+        run: |
+          cd build
+          make -j $(nproc) report-${{ inputs.mode }} || true
+
+      - name: Build debug log zip
+        if: ${{ inputs.build_only != 'true' }}
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          else
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          fi
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+
+      - name: Upload debug artifacts
+        if: ${{ inputs.build_only != 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          retention-days: 90
+
+      - name: Save results
+        if: ${{ inputs.build_only != 'true' }}
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc newlib test/allowlist `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          else
+            PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
+          fi
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+
+      - name: Upload results artifact
+        if: ${{ inputs.build_only != 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          retention-days: 90

@@ -1,0 +1,92 @@
+name: Lint
+
+on:
+  workflow_call:
+    inputs:
+      patch_name:
+        required: true
+        type: string
+      riscv_gnu_toolchain_hash:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Install prereqs
+        run: |
+          pip3 install termcolor unidiff
+
+      - name: Report start linter
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'starting linter' -rid ${{ github.run_id }} -state 'pending' -context 'linter' -token 'PLACEHOLDER'
+
+      # Only lint the last patch in the series since that's where the warning will be displayed
+      - name: Lint patch
+        id: lint
+        run: |
+          let count=$(ls -1 patches | wc -l)
+          python ./scripts/check_GNU_style.py "./patches/patch-$count.patch" | tee "lint_results.txt"
+          if (($(cat lint_results.txt | wc -l) > 0)); then
+            echo "lint_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "lint_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate issue
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        run: |
+          python ./scripts/generate_linter_fail_report.py --linter-log lint_results.txt --patch-name ${{ inputs.patch_name }}
+
+      - name: Trim issue length # reduce the number of lines in final issue so github always creates issue
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        run: |
+          head -c 65000 linter_fail_report.md > trimmed_issue.md
+          if [ $(cat trimmed_issue.md | wc -l) -ne $(cat linter_fail_report.md | wc -l) ]; then echo "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
+          run_id=${{ github.run_id }} && echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/$run_id" >> trimmed_issue.md
+          cat trimmed_issue.md
+
+      - name: Create or update summary issue
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/trimmed_issue.md
+          update_existing: true
+
+      - name: Report linter warning
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'linter found issues with this patch' -iid ${{ steps.create-issue.outputs.number }} -state 'warning' -context 'linter' -token 'PLACEHOLDER'
+
+      - name: Report linter success
+        if: ${{ steps.lint.outputs.lint_failed == 'false' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'linter success' -rid ${{ github.run_id }} -state 'success' -context 'linter' -token 'PLACEHOLDER'
+

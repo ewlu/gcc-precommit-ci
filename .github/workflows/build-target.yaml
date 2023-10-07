@@ -1,0 +1,104 @@
+name: Build-Target
+
+on:
+  workflow_call:
+    inputs:
+      patch_name:
+        required: true
+        type: string
+      gcchash:
+        required: true
+        type: string
+      build_only:
+        required: true
+        type: string
+      new_gcchash:
+        required: true
+        type: string
+      tot_hash:
+        required: true
+        type: string
+      riscv_gnu_toolchain_hash:
+        required: true
+        type: string
+
+jobs:
+  build-issue:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Create build pending issue
+        run: |
+          printf -- "---\ntitle: Build GCC Status ${{ inputs.patch_name }}\n---\n" > issue.md
+          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+
+      - name: Create build report issue
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: issue.md
+          update_existing: true
+
+  creg: # Check Regressions. Short name so I can see the matrix string in github
+    needs: [build-issue]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [linux]
+        target:
+          [
+            rv32gcv-ilp32d, # rv32 vector
+            rv64gcv-lp64d, # rv64 vector
+            # rv32gc_zba_zbb_zbc_zbs-ilp32d, # rv32 bitmanip
+            # rv64gc_zba_zbb_zbc_zbs-lp64d, # rv64 bitmanip
+            # rv32gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-ilp32d, # rv32 vector crypto
+            # rv64gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-lp64d, # rv64 vector crypto
+            rv64imafdcv_zicond_zawrs_zbc_zvkng_zvksg_zvbb_zvbc_zicsr_zba_zbb_zbs_zicbom_zicbop_zicboz_zfhmin_zkt-lp64d, # RVA23U64 profile with optional extensions, excluding unsupported extensions
+          ]
+        multilib: [non-multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      gcchash: ${{ inputs.gcchash }}
+      new_gcchash: ${{ inputs.new_gcchash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ inputs.build_only }}
+      run_on_self_hosted: false
+      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+
+  cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
+    needs: [build-issue]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [newlib]
+        target: [rv64gc-lp64d] # Dummy placeholder. Actually runs rv32/rv64 multilib
+        multilib: [multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      gcchash: ${{ inputs.gcchash }}
+      new_gcchash: ${{ inputs.new_gcchash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ inputs.build_only }}
+      run_on_self_hosted: false
+      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+
+  summarize:
+    if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
+    needs: [build-issue, creg, cmreg]
+    permissions:
+      issues: write
+    uses: ./.github/workflows/generate-precommit-summary.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      gcchash: ${{ inputs.gcchash }}
+      new_gcchash: ${{ inputs.new_gcchash }}
+      build_only: ${{ inputs.build_only }}
+      tot_hash: ${{ inputs.tot_hash }}
+      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}

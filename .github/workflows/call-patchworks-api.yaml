@@ -1,0 +1,160 @@
+name: Call-Patchworks-Api
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  get-patch-info:
+    runs-on: ubuntu-20.04
+    environment: production
+    if: ${{ !github.event.issue.pull_request && (contains(github.event.comment.body, '/pass') || contains(github.event.comment.body, '/warn') || contains(github.event.comment.body, '/error')) && (github.event.comment.user.login == 'ewlu' || github.event.comment.user.login == 'patrick-rivos') }}
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+          pip install pygithub==1.59.1 requests
+
+      - name: Get patch-name
+        id: patch-name
+        run: |
+          export title="${{ github.event.issue.title }}"
+          export PATCH_NAME=${title##* }
+          echo $PATCH_NAME
+          echo "patch_name=$PATCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Get check
+        id: check
+        run: |
+          export title="${{ github.event.issue.title }}"
+          export CHECK=$(echo ${title%% *})
+          echo $CHECK
+          if [ $CHECK == 'Testsuite' ]; then export CHECK=Testing; fi
+          echo "check=$CHECK" >> $GITHUB_OUTPUT
+
+      - name: Download patch
+        run: |
+          mkdir temp
+          python ./scripts/download_artifact.py -name ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches -repo "ewlu/gcc-precommit-ci" -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
+
+      - name: Extract patch
+        run: |
+          unzip ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches
+          unzip ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches.zip
+
+      - name: Get patch id
+        id: patch-id
+        run: |
+          export PATCH_ID=$(tail -n 1 ./patches/${{ steps.patch-name.outputs.patch_name }})
+          echo $PATCH_ID
+          echo "patch_id=$PATCH_ID" >> $GITHUB_OUTPUT
+
+    outputs:
+      patch_name: ${{ steps.patch-name.outputs.patch_name }}
+      patch_id: ${{ steps.patch-id.outputs.patch_id }}
+      check: ${{ steps.check.outputs.check }}
+
+  report-pass:
+    needs: [get-patch-info]
+    if: ${{ contains(github.event.comment.body, '/pass') }}
+    runs-on: ubuntu-20.04
+    environment: production
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+          pip install requests
+
+      - name: Report pass
+        run: |
+          if [ ${{ needs.get-patch-info.outputs.check }} == 'Apply' ]; then export DESC="Patch applied"; else export DESC="${{ needs.get-patch-info.outputs.check }} passed"; fi
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'success' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment
+
+
+  report-warn:
+    needs: [get-patch-info]
+    if: ${{ contains(github.event.comment.body, '/warn') }}
+    runs-on: ubuntu-20.04
+    environment: production
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+          pip install requests
+
+      - name: Report Warning
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc '${{ needs.get-patch-info.outputs.check }} warning' -iid ${{ github.event.issue.number }} -state 'warning' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment
+
+
+  report-error:
+    needs: [get-patch-info]
+    if: ${{ contains(github.event.comment.body, '/error') }}
+    runs-on: ubuntu-20.04
+    environment: production
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+          pip install requests
+
+      - name: Report Error
+        run: |
+          if [ ${{ needs.get-patch-info.outputs.check }} == 'Apply' ]; then export DESC="Patch failed to apply"; else export DESC="${{ needs.get-patch-info.outputs.check }} failed"; fi
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'fail' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment

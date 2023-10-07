@@ -1,0 +1,279 @@
+name: Run checks
+
+on:
+  workflow_call:
+    inputs:
+      patch_name:
+        required: true
+        type: string
+      gcchash: # Baseline gcc hash
+        required: true
+        type: string
+      riscv_gnu_toolchain_hash:
+        required: true
+        type: string
+
+jobs:
+  download_patches:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patch urls artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: patch_urls
+          path: ./riscv-gnu-toolchain
+
+      - name: Download patchworks urls artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: patchworks_urls
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patch urls
+        run: |
+          unzip patch_files.zip
+
+      - name: Extract patchworks urls
+        run: |
+          unzip patchworks_files.zip
+
+      - name: Create patches dir
+        run: |
+          mkdir patches
+
+      - name: Download patches from urls
+        run: |
+          scripts/download_patches.sh -p ${{ inputs.patch_name }}
+          mv patchworks_urls/${{ inputs.patch_name }} patches/
+
+      - name: Zip patches
+        run: |
+          zip -r ${{ inputs.patch_name }}-downloaded-patches.zip patches
+
+      - name: Upload patches artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: |
+            riscv-gnu-toolchain/${{ inputs.patch_name }}-downloaded-patches.zip
+          retention-days: 90
+  lint:
+    needs: [download_patches]
+    uses: ./.github/workflows/lint.yaml
+    permissions:
+      issues: write
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+
+  apply:
+    needs: [download_patches]
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
+          free_up_space: false
+
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.gcchash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.gcchash }}
+
+      - name: Create pending issue
+        run: |
+          printf -- "---\ntitle: Apply Patch Status ${{ inputs.patch_name }}\n---\n" > issue.md
+          printf "\nPending\n" >> issue.md
+          printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
+
+      - name: Create apply report issue
+        uses: JasonEtco/create-an-issue@v2
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report that we're now attempting to apply the patch
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Attempting to apply patch to tip-of-tree' -iid ${{ steps.update-issue.outputs.number }} -state 'pending' -context 'apply-patch' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Apply patches to baseline
+        id: apply-baseline
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix -q --3way &> out_base || true
+          cat out_base
+          if [[ $(cat out_base | wc -l) != 0 ]]; then
+            echo "Failed to apply patch cleanly to baseline hash"
+            echo "\`\`\`" >> out_base
+            git am --show-current-patch=diff &>> out_base
+            echo "\`\`\`" >> out_base
+            git am --abort
+            echo "apply_baseline=false" >> $GITHUB_OUTPUT
+          else
+            echo "apply_baseline=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Apply patches to tip of tree
+        id: apply-tip-of-tree
+        run: |
+          cd gcc
+          git reset --hard origin/master
+          git pull origin master
+          export TOT_HASH=$(git rev-parse HEAD)
+          git am ../patches/*.patch --whitespace=fix -q --3way &> out_tot || true
+          cat out_tot
+          if [[ $(cat out_tot | wc -l) != 0 ]]; then
+            echo "Failed to apply patch cleanly to tip of tree"
+            echo "\`\`\`" >> out_tot
+            git am --show-current-patch=diff &>> out_tot
+            echo "\`\`\`" >> out_tot
+            git am --abort
+            echo "apply_tot=false" >> $GITHUB_OUTPUT
+          else
+            echo "apply_tot=true" >> $GITHUB_OUTPUT
+          fi
+          echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+
+      - name: Check build only
+        id: build-only
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        run: |
+          echo "build_only=true" >> $GITHUB_OUTPUT
+
+      - name: Check early exit
+        id: early-exit
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        run: |
+          echo "early_exit=true" >> $GITHUB_OUTPUT
+
+      - name: Build early exit report
+        if: ${{ steps.early-exit.outputs.early_exit == 'true' }}
+        run: |
+          printf -- "---\ntitle: Apply Patch Status ${{ inputs.patch_name }}\n---\n" > issue.md
+          printf "\nFailed to apply patch\n" >> issue.md
+          cat gcc/out_base gcc/out_tot >> issue.md
+          head -c 65000 issue.md > trimmed_issue.md
+          if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
+          printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> trimmed_issue.md
+          mv trimmed_issue.md issue.md
+
+      - name: Build success report
+        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        run: |
+          printf -- "---\ntitle: Apply Patch Status ${{ inputs.patch_name }}\n---\n" > issue.md
+          printf "\nSuccess\n" >> issue.md
+          printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
+
+      - name: Update apply issue
+        uses: JasonEtco/create-an-issue@v2
+        id: update-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: riscv-gnu-toolchain/issue.md
+          update_existing: true
+
+      - name: Report patch failed to apply to tip of tree
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch did not apply to tip of tree.' -iid ${{ steps.update-issue.outputs.number }} -state 'warning' -context 'apply-patch' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Report patch applied to tip of tree successfully
+        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied to tip of tree successfully.' -iid ${{ steps.update-issue.outputs.number }} -state 'success' -context 'apply-patch' -token 'PLACEHOLDER'
+        continue-on-error: true
+
+      - name: Output new gcchash
+        id: new-gcc-hash
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' || steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        run: |
+          cd gcc
+          git reset --hard origin/master
+          if [ "${{ steps.apply-baseline.outputs.apply_baseline }}" == "true" ]; then
+            git checkout ${{ inputs.gcchash }}
+          fi
+          git am ../patches/*.patch --whitespace=fix --3way
+          export NEW_GCCHASH=$(git rev-parse HEAD)
+          echo $NEW_GCCHASH
+          echo "new_gcchash=$NEW_GCCHASH" >> $GITHUB_OUTPUT
+
+    outputs:
+      tot_hash: ${{ steps.apply-tip-of-tree.outputs.tot_hash }}
+      early_exit: ${{ steps.early-exit.outputs.early_exit }}
+      build_only: ${{ steps.build-only.outputs.build_only }}
+      new_gcchash: ${{ steps.new-gcc-hash.outputs.new_gcchash }}
+
+  build_test:
+    needs: [download_patches, apply]
+    if: ${{ needs.apply.outputs.early_exit != 'true' }}
+    uses: ./.github/workflows/build-target.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      gcchash: ${{ inputs.gcchash }}
+      build_only: ${{ needs.apply.outputs.build_only }}
+      new_gcchash: ${{ needs.apply.outputs.new_gcchash }}
+      tot_hash: ${{ needs.apply.outputs.tot_hash }}
+      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
