@@ -149,7 +149,7 @@ jobs:
 
       - name: Report that we're now attempting to apply the patch
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Attempting to apply patch to tip-of-tree' -iid ${{ steps.update-issue.outputs.number }} -state 'pending' -context 'apply-patch' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Attempting to apply patch to tip-of-tree' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Apply patches to baseline
