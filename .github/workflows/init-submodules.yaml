@@ -36,6 +36,15 @@ jobs:
           cd riscv-gnu-toolchain
           git checkout ${{ steps.riscv_gnu_toolchain_hash.outputs.riscv_gnu_toolchain_hash }}
 
+      - name: Determine baseline
+        id: gcc-hash
+        run: |
+          python ./scripts/get_baseline_hash.py -token ${{ secrets.GITHUB_TOKEN }}
+
+          export GCCHASH=$(cat baseline.txt)
+          echo $GCCHASH
+          echo "gcchash=$GCCHASH" >> $GITHUB_OUTPUT
+
       - name: Retrieve cache
         id: retrieve-cache
         uses: actions/cache@v3
@@ -63,19 +72,12 @@ jobs:
           rm -rf gcc
           git clone git://gcc.gnu.org/git/gcc.git
 
-      - name: Get GCC hash
+      - name: Checkout baseline GCC hash
         working-directory: riscv-gnu-toolchain/gcc
-        id: gcc-hash
         run: |
           git checkout master
           git pull
-          if [ "${{ github.event.inputs.gcchash }}" == "" ]; then
-            export GCCHASH=$(git rev-parse HEAD)
-          else
-            export GCCHASH=${{ github.event.inputs.gcchash }}
-          fi
-          echo $GCCHASH
-          echo "gcchash=$GCCHASH" >> "$GITHUB_OUTPUT"
+          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
 
       - name: Cache submodules
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
