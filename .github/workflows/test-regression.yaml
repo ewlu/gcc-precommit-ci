@@ -98,6 +98,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create build report issue
         uses: JasonEtco/create-an-issue@v2
@@ -141,6 +142,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Zip build log
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -161,6 +163,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Update build report issue
         uses: JasonEtco/create-an-issue@v2
@@ -571,6 +574,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create apply report issue
         uses: JasonEtco/create-an-issue@v2
@@ -614,6 +618,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Zip build log
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -634,6 +639,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create apply report issue
         uses: JasonEtco/create-an-issue@v2

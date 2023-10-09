@@ -68,6 +68,7 @@ jobs:
           head -c 65000 linter_fail_report.md > trimmed_issue.md
           if [ $(cat trimmed_issue.md | wc -l) -ne $(cat linter_fail_report.md | wc -l) ]; then echo "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
           run_id=${{ github.run_id }} && echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/$run_id" >> trimmed_issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> trimmed_issue.md
           cat trimmed_issue.md
 
       - name: Create or update summary issue

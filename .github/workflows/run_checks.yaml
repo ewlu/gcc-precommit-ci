@@ -137,6 +137,7 @@ jobs:
           printf -- "---\ntitle: Apply Patch Status ${{ inputs.patch_name }}\n---\n" > issue.md
           printf "\nPending\n" >> issue.md
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create apply report issue
         uses: JasonEtco/create-an-issue@v2
@@ -217,6 +218,7 @@ jobs:
           if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> trimmed_issue.md
           mv trimmed_issue.md issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Build success report
         if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
@@ -224,6 +226,7 @@ jobs:
           printf -- "---\ntitle: Apply Patch Status ${{ inputs.patch_name }}\n---\n" > issue.md
           printf "\nSuccess\n" >> issue.md
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
+          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Update apply issue
         uses: JasonEtco/create-an-issue@v2
