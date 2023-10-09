@@ -96,7 +96,7 @@ jobs:
       - name: Report pass
         run: |
           if [ ${{ needs.get-patch-info.outputs.check }} == 'Apply' ]; then export DESC="Patch applied"; else export DESC="${{ needs.get-patch-info.outputs.check }} passed"; fi
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'success' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'success' -context '${{ needs.get-patch-info.outputs.check }}' -token ${{ secrets.PATCHWORK_API }} -comment
 
 
   report-warn:
@@ -126,7 +126,7 @@ jobs:
 
       - name: Report Warning
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc '${{ needs.get-patch-info.outputs.check }} warning' -iid ${{ github.event.issue.number }} -state 'warning' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc '${{ needs.get-patch-info.outputs.check }} warning' -iid ${{ github.event.issue.number }} -state 'warning' -context '${{ needs.get-patch-info.outputs.check }}' -token ${{ secrets.PATCHWORK_API }} -comment
 
 
   report-error:
@@ -157,4 +157,4 @@ jobs:
       - name: Report Error
         run: |
           if [ ${{ needs.get-patch-info.outputs.check }} == 'Apply' ]; then export DESC="Patch failed to apply"; else export DESC="${{ needs.get-patch-info.outputs.check }} failed"; fi
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'fail' -context '${{ needs.get-patch-info.outputs.check }}' -token 'PLACEHOLDER' -comment
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc "$DESC" -iid ${{ github.event.issue.number }} -state 'fail' -context '${{ needs.get-patch-info.outputs.check }}' -token ${{ secrets.PATCHWORK_API }} -comment
