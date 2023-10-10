@@ -70,7 +70,7 @@ jobs:
       riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
-    needs: [init-submodules]
+    needs: [build-issue]
     strategy:
       fail-fast: false
       matrix:
@@ -112,7 +112,7 @@ jobs:
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
-    needs: [build-issue, creg, cmreg]
+    needs: [build-issue, creg, cmreg, creg-sh]
     permissions:
       issues: write
     uses: ./.github/workflows/generate-precommit-summary.yaml
