@@ -595,7 +595,7 @@ jobs:
           mkdir build
           cd build
           if [ "${{ inputs.multilib }}" == "multilib" ]; then
-            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gcv-lp64d--;rv32gcv-ilp32d--"
           else
             TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
             ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
