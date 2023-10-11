@@ -63,9 +63,9 @@ jobs:
       - name: Update times for workflow dispatch
         if: ${{ inputs.timestamp != '' }}
         run: |
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 450) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 450) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1350) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1800) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
 
       - name: Get list of new patches
         run: |
