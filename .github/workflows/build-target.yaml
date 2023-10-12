@@ -76,7 +76,7 @@ jobs:
       matrix:
         mode: [linux]
         target:
-          [ rv32gcv-ilp32d ] # Dummy placeholder. runs rv32/64gcv
+          [ rv64gcv-lp64d ] # Dummy placeholder. runs rv32/64gcv
         multilib: [multilib]
     uses: ./.github/workflows/test-regression.yaml
     with:
