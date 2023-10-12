@@ -115,7 +115,13 @@ jobs:
           unzip current_logs.zip
           mv current_logs previous_logs
 
-      # Download all workload artifacts
+      - name: Separate multilib results
+        run: |
+          python scripts/separate_multilib_results.py -file previous_logs/gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log -outdir previous_logs
+          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib-report.log
+          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-llp32d-${{ inputs.gcchash }}-multilib-report.log
+
+      # Download all current workflow artifacts
 
       - name: Print API usage info
         run: |
@@ -125,20 +131,11 @@ jobs:
             https://api.github.com/rate_limit
 
       - name: Download All targets
-        if: ${{ steps.dispatch.outputs.workflow_dispatch == 'true' }}
         uses: ./.github/actions/download-all-comparison-artifacts
         with:
           gcchash: ${{ inputs.new_gcchash }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: 'ewlu/gcc-precommit-ci'
-
-      - name: Download All targets
-        if: ${{ steps.dispatch.outputs.workflow_dispatch == '' }}
-        uses: ./.github/actions/download-all-comparison-artifacts
-        with:
-          gcchash: ${{ inputs.new_gcchash }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repo: 'patrick-rivos/gcc-postcommit-ci'
 
       - name: Print API usage info
         run: |
@@ -156,8 +153,14 @@ jobs:
           done
           ls current_logs
 
+      - name: Separate multilib logs
+        run: |
+          python scripts/separate_multilib_results.py -file current_logs/gcc-linux-rv64gcv-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
+          python scripts/separate_multilib_results.py -file current_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
+
       - name: Compare artifacts
         run: |
+          ls current_logs
           python ./scripts/compare_all_artifacts.py -hash ${{ inputs.new_gcchash }}
 
       - name: Remove testsuite failures on build-only
