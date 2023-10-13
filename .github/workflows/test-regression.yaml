@@ -556,6 +556,13 @@ jobs:
           git fetch
           git checkout ${{ inputs.gcchash }}
 
+      - name: Checkout gcc hash
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          cd gcc
+          git reset --hard origin/master
+          git pull origin master
+
       - name: Apply patches to baseline
         run: |
           cd gcc
@@ -641,7 +648,7 @@ jobs:
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
-      - name: Create apply report issue
+      - name: Create build report issue
         uses: JasonEtco/create-an-issue@v2
         if: ${{ always() }}
         id: update-issue
@@ -675,6 +682,7 @@ jobs:
           retention-days: 5
 
       - name: Report testing
+        if: ${{ inputs.build_only != 'true' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
