@@ -1,8 +1,6 @@
 name: "Setup Env"
 description: "Sets up the environment"
 inputs:
-  riscv_gnu_toolchain_hash:
-    required: true
   free_up_space:
     description: 'Do (or dont) free up space by deleting unused libraries. Defaults to false'
     required: false
@@ -15,9 +13,7 @@ runs:
         shell: bash
         working-directory: ./
         run: |
-          rm -rf riscv-gnu-toolchain
-          git clone https://github.com/patrick-rivos/riscv-gnu-toolchain.git
-          cd riscv-gnu-toolchain && git checkout ${{ inputs.riscv_gnu_toolchain_hash }}
+          git submodule update --init riscv-gnu-toolchain
 
       - name: Remove unneeded frameworks to recover disk space
         shell: bash

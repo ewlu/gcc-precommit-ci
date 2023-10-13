@@ -27,9 +27,6 @@ on:
       run_on_self_hosted:
         required: true
         type: string
-      riscv_gnu_toolchain_hash:
-        required: true
-        type: string
 
 jobs:
   build:
@@ -45,7 +42,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: true
 
       - name: Restore submodules from cache
@@ -241,7 +237,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: true
 
       - name: Restore submodules from cache
@@ -409,7 +404,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: false
 
       - name: Restore submodules from cache
@@ -526,7 +520,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: false
 
       - name: Restore submodules from cache

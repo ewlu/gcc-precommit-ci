@@ -9,9 +9,6 @@ on:
       gcchash: # Baseline gcc hash
         required: true
         type: string
-      riscv_gnu_toolchain_hash:
-        required: true
-        type: string
 
 jobs:
   download_patches:
@@ -25,7 +22,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: false
 
       - name: Restore submodules from cache
@@ -87,7 +83,6 @@ jobs:
       issues: write
     with:
       patch_name: ${{ inputs.patch_name }}
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
 
   apply:
     needs: [download_patches]
@@ -101,7 +96,6 @@ jobs:
       - name: Setup env
         uses: ./.github/actions/setup-env
         with:
-          riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
           free_up_space: false
 
       - name: Restore submodules from cache
@@ -273,4 +267,3 @@ jobs:
       build_only: ${{ needs.apply.outputs.build_only }}
       new_gcchash: ${{ needs.apply.outputs.new_gcchash }}
       tot_hash: ${{ needs.apply.outputs.tot_hash }}
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}

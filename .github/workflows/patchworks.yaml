@@ -26,21 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Get riscv-gnu-toolchain hash
-        working-directory: ./
-        id: riscv_gnu_toolchain_hash
-        run: |
-          export HASH=$(git rev-parse HEAD:riscv-gnu-toolchain)
-          echo $HASH
-          echo "riscv_gnu_toolchain_hash=$HASH" >> "$GITHUB_OUTPUT"
-
       - name: Clone riscv-gnu-toolchain
         working-directory: ./
         run: |
-          rm -rf riscv-gnu-toolchain
-          git clone https://github.com/patrick-rivos/riscv-gnu-toolchain.git
-          cd riscv-gnu-toolchain
-          git checkout ${{ steps.riscv_gnu_toolchain_hash.outputs.riscv_gnu_toolchain_hash }}
+          git submodule update --init riscv-gnu-toolchain
 
       - name: Get timestamps and make directories
         run: |
@@ -120,4 +109,3 @@ jobs:
     with:
       patch_name: ${{ matrix.patch_name }}
       gcchash: ${{ needs.init-submodules.outputs.gcchash }}
-      riscv_gnu_toolchain_hash: ${{ needs.init-submodules.outputs.riscv_gnu_toolchain_hash }}
