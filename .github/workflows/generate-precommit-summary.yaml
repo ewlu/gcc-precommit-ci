@@ -157,6 +157,7 @@ jobs:
         run: |
           python scripts/separate_multilib_results.py -file current_logs/gcc-linux-rv64gcv-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
           python scripts/separate_multilib_results.py -file current_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
+        continue-on-error: true
 
       - name: Compare artifacts
         run: |
