@@ -183,9 +183,7 @@ jobs:
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
             echo "Failed to apply patch cleanly to tip of tree"
-            echo "\`\`\`" >> out_tot
             git am --show-current-patch=diff &>> out_tot
-            echo "\`\`\`" >> out_tot
             git am --abort
             echo "apply_tot=false" >> $GITHUB_OUTPUT
           else
