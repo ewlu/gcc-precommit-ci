@@ -163,6 +163,12 @@ jobs:
           ls current_logs
           python ./scripts/compare_all_artifacts.py -hash ${{ inputs.new_gcchash }}
 
+      - name: Search for build failures
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -patch ${{ inputs.patch_name }} -repo ewlu/gcc-precommit-ci -failure
+          ls current_logs
+        continue-on-error: true
+
       - name: Remove testsuite failures on build-only
         if: ${{ inputs.build_only == 'true' }}
         run: |
