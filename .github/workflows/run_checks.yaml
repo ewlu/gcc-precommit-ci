@@ -202,7 +202,7 @@ jobs:
 
       - name: Build apply report
         run: |
-          python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.gcchash }} -thash ${{ steps.apply-tip-of-tree.outputs.tot_hash }} -bstatus ${{ steps.apply-baseline.outputs.apply_baseline }} -tstatus ${{ steps.apply-tip-of-tree.outputs.apply_tot }} -o issue.md
+          python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.gcchash }} -thash ${{ inputs.tot_hash }} -bstatus ${{ steps.apply-baseline.outputs.apply_baseline }} -tstatus ${{ steps.apply-tip-of-tree.outputs.apply_tot }} -o issue.md
           head -c 65000 issue.md > trimmed_issue.md
           if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> trimmed_issue.md
