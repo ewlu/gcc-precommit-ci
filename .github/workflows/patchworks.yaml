@@ -15,6 +15,12 @@ on:
       timestamp:
         description: 'Patch Timestamp (UTC)'
         required: true
+      baseline_gcc_hash:
+        description: 'Baseline hash'
+        required: false
+      tip_of_tree_hash:
+        description: 'Trunk hash'
+        required: false
 
 jobs:
   fetch_patches:
@@ -54,8 +60,8 @@ jobs:
 
           cat runs.log
 
-          mkdir patch_urls
-          mkdir patchworks_urls
+          mkdir -p patch_urls
+          mkdir -p patchworks_urls
 
       - name: Update times for workflow dispatch
         if: ${{ inputs.timestamp != '' }}
@@ -63,6 +69,13 @@ jobs:
           TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
           TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
           TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1800) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
+
+          cat date_older.txt
+          cat date_old.txt
+          cat date_recent.txt
+
+          mkdir -p patch_urls
+          mkdir -p patchworks_urls
 
       - name: Get list of new patches
         run: |
@@ -104,6 +117,9 @@ jobs:
     needs: [fetch_patches]
     if: ${{ needs.fetch_patches.outputs.list_of_patch_names != '[]' }}
     uses: ./.github/workflows/init-submodules.yaml
+    with:
+      baseline_hash: ${{ inputs.baseline_gcc_hash }}
+      tot_hash: ${{ inputs.tip_of_tree_hash }}
 
   patch_matrix:
     needs: [fetch_patches, init-submodules]
@@ -117,3 +133,4 @@ jobs:
     with:
       patch_name: ${{ matrix.patch_name }}
       gcchash: ${{ needs.init-submodules.outputs.gcchash }}
+      tot_hash: ${{ needs.init-submodules.outputs.tot_hash }}
