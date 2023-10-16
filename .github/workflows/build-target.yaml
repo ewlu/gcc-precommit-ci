@@ -18,9 +18,6 @@ on:
       tot_hash:
         required: true
         type: string
-      riscv_gnu_toolchain_hash:
-        required: true
-        type: string
 
 jobs:
   build-issue:
@@ -67,7 +64,6 @@ jobs:
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       run_on_self_hosted: false
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [build-issue]
@@ -88,7 +84,6 @@ jobs:
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       run_on_self_hosted: true
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [build-issue]
@@ -108,7 +103,6 @@ jobs:
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       run_on_self_hosted: false
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
@@ -122,4 +116,3 @@ jobs:
       new_gcchash: ${{ inputs.new_gcchash }}
       build_only: ${{ inputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}
-      riscv_gnu_toolchain_hash: ${{ inputs.riscv_gnu_toolchain_hash }}
