@@ -5,9 +5,18 @@ name: "Intialize submodules"
 
 on:
   workflow_call:
+    inputs:
+      baseline_hash:
+        required: false
+        type: string
+      tot_hash:
+        required: false
+        type: string
     outputs:
         gcchash:
           value: ${{ jobs.init-submodules.outputs.gcchash }}
+        tot_hash:
+          value: ${{ jobs.init-submodules.outputs.tot_hash }}
 
 jobs:
   init-submodules:
@@ -29,7 +38,7 @@ jobs:
         run: |
           python ./scripts/get_baseline_hash.py -token ${{ secrets.GITHUB_TOKEN }}
 
-          export GCCHASH=$(cat baseline.txt)
+          if [ '${{ inputs.baseline_hash }}' == '' ] ; then export GCCHASH=$(cat baseline.txt); else export GCCHASH=${{ inputs.baseline_hash }}; fi
           echo $GCCHASH
           echo "gcchash=$GCCHASH" >> $GITHUB_OUTPUT
 
@@ -62,10 +71,14 @@ jobs:
 
       - name: Checkout baseline GCC hash
         working-directory: riscv-gnu-toolchain/gcc
+        id: tot-hash
         run: |
           git checkout master
           git pull
           git checkout ${{ steps.gcc-hash.outputs.gcchash }}
+          if [ ${{ inputs.tot_hash }} != '']; then git checkout ${{ inputs.tot_hash }}; fi
+          export TOT_HASH=$(git rev-parse HEAD)
+          export "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
 
       - name: Cache submodules
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
@@ -99,3 +112,4 @@ jobs:
 
     outputs:
       gcchash: ${{ steps.gcc-hash.outputs.gcchash }}
+      tot_hash: ${{ steps.tot-hash.outputs.tot_hash }}

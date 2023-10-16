@@ -9,6 +9,9 @@ on:
       gcchash: # Baseline gcc hash
         required: true
         type: string
+      tot_hash: # Tip of tree gcc hash
+        required: true
+        type: string
 
 jobs:
   download_patches:
@@ -131,6 +134,7 @@ jobs:
           python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.gcchash }} -bstatus pending -tstatus pending -o issue.md
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          cat issue.md
 
       - name: Create apply report issue
         uses: JasonEtco/create-an-issue@v2
@@ -170,9 +174,7 @@ jobs:
         id: apply-tip-of-tree
         run: |
           cd gcc
-          git reset --hard origin/master
-          git pull origin master
-          export TOT_HASH=$(git rev-parse HEAD)
+          git reset --hard ${{ inputs.tot_hash }}
           git am ../patches/*.patch --whitespace=fix -q --3way &> out_tot || true
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
@@ -183,7 +185,6 @@ jobs:
           else
             echo "apply_tot=true" >> $GITHUB_OUTPUT
           fi
-          echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
         continue-on-error: true
 
 
@@ -207,6 +208,7 @@ jobs:
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> trimmed_issue.md
           mv trimmed_issue.md issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          cat issue.md
 
       - name: Update apply issue
         uses: JasonEtco/create-an-issue@v2
@@ -234,7 +236,7 @@ jobs:
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' || steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
           cd gcc
-          git reset --hard origin/master
+          git reset --hard ${{ inputs.tot_hash }}
           if [ "${{ steps.apply-baseline.outputs.apply_baseline }}" == "true" ]; then
             git checkout ${{ inputs.gcchash }}
           fi
@@ -244,7 +246,6 @@ jobs:
           echo "new_gcchash=$NEW_GCCHASH" >> $GITHUB_OUTPUT
 
     outputs:
-      tot_hash: ${{ steps.apply-tip-of-tree.outputs.tot_hash }}
       early_exit: ${{ steps.early-exit.outputs.early_exit }}
       build_only: ${{ steps.build-only.outputs.build_only }}
       new_gcchash: ${{ steps.new-gcc-hash.outputs.new_gcchash }}
@@ -258,4 +259,4 @@ jobs:
       gcchash: ${{ inputs.gcchash }}
       build_only: ${{ needs.apply.outputs.build_only }}
       new_gcchash: ${{ needs.apply.outputs.new_gcchash }}
-      tot_hash: ${{ needs.apply.outputs.tot_hash }}
+      tot_hash: ${{ inputs.tot_hash }}
