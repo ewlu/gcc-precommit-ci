@@ -110,9 +110,10 @@ jobs:
 
       - name: Separate multilib results
         run: |
-          python scripts/separate_multilib_results.py -file previous_logs/gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log -outdir previous_logs
+          python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
           mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib-report.log
           mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-llp32d-${{ inputs.gcchash }}-multilib-report.log
+        continue-on-error: true
 
       # Download all current workflow artifacts
 
@@ -148,8 +149,7 @@ jobs:
 
       - name: Separate multilib logs
         run: |
-          python scripts/separate_multilib_results.py -file current_logs/gcc-linux-rv64gcv-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
-          python scripts/separate_multilib_results.py -file current_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.new_gcchash }}-multilib-report.log -outdir current_logs
+          python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
         continue-on-error: true
 
       - name: Compare artifacts
