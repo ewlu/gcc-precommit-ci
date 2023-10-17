@@ -139,6 +139,7 @@ jobs:
           cat out_base
           if [[ $(cat out_base | wc -l) != 0 ]]; then
             echo "Failed to apply patch cleanly to baseline hash"
+            git am --show-current-patch=diff
             echo "\`\`\`" >> out_base
             git am --show-current-patch=diff &>> out_base
             echo "\`\`\`" >> out_base
@@ -157,6 +158,7 @@ jobs:
           git am ../patches/*.patch --whitespace=fix -q --3way &> out_tot || true
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
+            git am --show-current-patch=diff
             echo "Failed to apply patch cleanly to tip of tree"
             git am --show-current-patch=diff &>> out_tot
             git am --abort
