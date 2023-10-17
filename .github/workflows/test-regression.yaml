@@ -24,6 +24,9 @@ on:
       build_only:
         required: true
         type: string
+      issue_num:
+        required: true
+        type: string
       run_on_self_hosted:
         required: true
         type: string
@@ -97,17 +100,17 @@ jobs:
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create build report issue
-        uses: JasonEtco/create-an-issue@v2
-        id: create-issue
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: riscv-gnu-toolchain/issue.md
-          update_existing: true
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
 
       - name: Report build
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ inputs.issue_num }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Configure
@@ -162,20 +165,20 @@ jobs:
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
-      - name: Update build report issue
-        uses: JasonEtco/create-an-issue@v2
+      - name: Create build report issue
+        uses: peter-evans/create-issue-from-file@v4
         if: ${{ always() }}
-        id: update-issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: riscv-gnu-toolchain/issue.md
-          update_existing: true
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid ${{ steps.update-issue.outputs.number }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid ${{ inputs.issue_num }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Remove sources to reclaim disk space
@@ -216,7 +219,7 @@ jobs:
 
       - name: Report build success
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid ${{ steps.update-issue.outputs.number }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid ${{ inputs.issue_num }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
     outputs:
@@ -593,18 +596,18 @@ jobs:
           echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
-      - name: Create apply report issue
-        uses: JasonEtco/create-an-issue@v2
-        id: create-issue
+      - name: Create build report issue
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: riscv-gnu-toolchain/issue.md
-          update_existing: true
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
 
       - name: Report build
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ inputs.issue_num }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Configure
@@ -660,24 +663,24 @@ jobs:
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
 
       - name: Create build report issue
-        uses: JasonEtco/create-an-issue@v2
+        uses: peter-evans/create-issue-from-file@v4
         if: ${{ always() }}
-        id: update-issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: riscv-gnu-toolchain/issue.md
-          update_existing: true
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build failure' -iid ${{ steps.update-issue.outputs.number }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build failure' -iid ${{ inputs.issue_num }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
 
       - name: Report build success
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build success' -iid ${{ steps.update-issue.outputs.number }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build success' -iid ${{ inputs.issue_num }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
 
       - name: Zip binaries
