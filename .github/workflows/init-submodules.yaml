@@ -75,9 +75,9 @@ jobs:
         run: |
           git checkout master
           git pull
-          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
           if [ ${{ inputs.tot_hash }} != '']; then git checkout ${{ inputs.tot_hash }}; fi
           export TOT_HASH=$(git rev-parse HEAD)
+          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
           echo $TOT_HASH
           echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
 
