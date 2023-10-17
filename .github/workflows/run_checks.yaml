@@ -138,8 +138,8 @@ jobs:
           git am ../patches/*.patch --whitespace=fix -q --3way &> out_base || true
           cat out_base
           if [[ $(cat out_base | wc -l) != 0 ]]; then
-            echo "Failed to apply patch cleanly to baseline hash"
             git am --show-current-patch=diff
+            echo "Failed to apply patch cleanly to baseline hash"
             echo "\`\`\`" >> out_base
             git am --show-current-patch=diff &>> out_base
             echo "\`\`\`" >> out_base
