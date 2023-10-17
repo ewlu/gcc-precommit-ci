@@ -129,27 +129,6 @@ jobs:
           git fetch
           git checkout ${{ inputs.gcchash }}
 
-      - name: Create pending issue
-        run: |
-          python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.gcchash }} -bstatus pending -tstatus pending -o issue.md
-          printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
-          cat issue.md
-
-      - name: Create apply report issue
-        uses: JasonEtco/create-an-issue@v2
-        id: create-issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: riscv-gnu-toolchain/issue.md
-          update_existing: true
-
-      - name: Report that we're now attempting to apply the patch
-        run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Attempting to apply patch to tip-of-tree' -iid ${{ steps.create-issue.outputs.number }} -state 'pending' -context 'apply-patch' -token 'PLACEHOLDER'
-        continue-on-error: true
-
       - name: Apply patches to baseline
         id: apply-baseline
         run: |
@@ -187,7 +166,6 @@ jobs:
           fi
         continue-on-error: true
 
-
       - name: Check build only
         id: build-only
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
@@ -210,7 +188,7 @@ jobs:
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
           cat issue.md
 
-      - name: Update apply issue
+      - name: Create apply issue
         uses: JasonEtco/create-an-issue@v2
         id: update-issue
         env:
