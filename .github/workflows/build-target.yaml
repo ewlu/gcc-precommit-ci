@@ -37,6 +37,16 @@ jobs:
           filename: issue.md
           update_existing: true
 
+      - name: Create build report issue
+        id: issue-number
+        run: |
+          export ISSUE_NUMBER=${{ steps.create-issue.outputs.number }}
+          echo $ISSUE_NUMBER
+          echo "issue_num=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
+    outputs:
+      issue_num: ${{ steps.issue-number.outputs.issue_num }}
+
   creg: # Check Regressions. Short name so I can see the matrix string in github
     needs: [build-issue]
     strategy:
@@ -63,6 +73,7 @@ jobs:
       new_gcchash: ${{ inputs.new_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
+      issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: false
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
@@ -83,6 +94,7 @@ jobs:
       new_gcchash: ${{ inputs.new_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
+      issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: true
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
@@ -102,6 +114,7 @@ jobs:
       new_gcchash: ${{ inputs.new_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
+      issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: false
 
   summarize:
