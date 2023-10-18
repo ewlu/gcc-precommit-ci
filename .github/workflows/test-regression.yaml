@@ -15,7 +15,7 @@ on:
       gcchash:
         required: true
         type: string
-      new_gcchash:
+      patch_applied_gcchash:
         required: true
         type: string
       multilib:
@@ -220,14 +220,14 @@ jobs:
 
       - name: Zip binaries
         run: |
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip build/bin
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip build/bin
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip
           retention-days: 5
 
       # Running testsuite (stamps/check-gcc-*) only uses stage2 & assorted folders
@@ -238,7 +238,7 @@ jobs:
       - name: Upload stage2 artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-stage2
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-stage2
           path: |
             riscv-gnu-toolchain/stage2.zip
           retention-days: 5
@@ -328,7 +328,7 @@ jobs:
       - name: Restore stage2
         uses: actions/download-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-stage2
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-stage2
           path: ./riscv-gnu-toolchain
 
       - name: Unzip artifacts
@@ -391,18 +391,18 @@ jobs:
       - name: Build debug log zip
         run: |
           if [ "${{ inputs.mode }}" == "newlib" ]; then
-            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           else
-            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           fi
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
 
       - name: Upload debug artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           retention-days: 90
 
       - name: Save results
@@ -412,14 +412,14 @@ jobs:
           else
             PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
           fi
-          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
 
       - name: Upload results artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
 
   # The self-hosted environment does not have the same path setup as the hosted runners
@@ -516,18 +516,18 @@ jobs:
       - name: Build debug log zip
         run: |
           if [ "${{ inputs.mode }}" == "newlib" ]; then
-            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           else
-            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           fi
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
 
       - name: Upload debug artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           retention-days: 90
 
       - name: Save results
@@ -537,14 +537,14 @@ jobs:
           else
             PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
           fi
-          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
 
       - name: Upload results artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
 
   # The self-hosted environment does not have the same path setup as the hosted runners
@@ -752,14 +752,14 @@ jobs:
 
       - name: Zip binaries
         run: |
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip build/bin
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip build/bin
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}.zip
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip
           retention-days: 5
 
       - name: Report testing
@@ -778,19 +778,19 @@ jobs:
         if: ${{ inputs.build_only != 'true' }}
         run: |
           if [ "${{ inputs.mode }}" == "newlib" ]; then
-            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-newlib-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           else
-            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            cat `find build/build-gcc-linux-stage2/gcc/testsuite/ -name g*.log` > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           fi
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.zip gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
 
       - name: Upload debug artifacts
         if: ${{ inputs.build_only != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-debug-output.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-debug-output.log
           retention-days: 90
 
       - name: Save results
@@ -801,13 +801,13 @@ jobs:
           else
             PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find build/build-gcc-linux-stage2/gcc/testsuite/ -name *.sum |paste -sd "," -`"
           fi
-          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          $PARSE_EXISTING_REPORT | tee gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
 
       - name: Upload results artifact
         if: ${{ inputs.build_only != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.new_gcchash }}-${{ inputs.multilib }}-report.log
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
