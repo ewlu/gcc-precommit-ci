@@ -27,6 +27,12 @@ on:
       issue_num:
         required: true
         type: string
+      build_comment_id:
+        required: true
+        type: string
+      test_comment_id:
+        required: true
+        type: string
       run_on_self_hosted:
         required: true
         type: string
@@ -95,41 +101,38 @@ jobs:
       - name: Install dependencies
         run: sudo ./.github/setup-apt.sh
 
-      - name: Update pending issue
+      - name: Build pending comment
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
-      - name: Create build report issue
-        uses: peter-evans/create-issue-from-file@v4
-        id: create-issue
+      - name: Update build pending report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-pending
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
         continue-on-error: true
 
       - name: backoff
-        if: ${{ steps.create-issue.outcome == 'failure' }}
+        if: ${{ steps.build-pending.outcome == 'failure' }}
         run: |
           sleep 10
 
-      - name: Retry issue update
-        if: ${{ steps.create-issue.outcome == 'failure' }}
-        uses: peter-evans/create-issue-from-file@v4
+      - name: Retry build pending report comment
+        if: ${{ steps.build-pending.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
 
       - name: Report build
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ inputs.issue_num }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Configure
@@ -159,9 +162,8 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
       - name: Zip build log
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -180,40 +182,38 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
-      - name: Create build report issue
-        uses: peter-evans/create-issue-from-file@v4
-        id: update-issue
+      - name: Update build complete report comment
         if: ${{ always() }}
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-complete
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+        continue-on-error: true
 
       - name: backoff
-        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
         run: |
           sleep 10
 
-      - name: Retry issue update
-        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
-        uses: peter-evans/create-issue-from-file@v4
+      - name: Retry build pending report comment
+        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid ${{ inputs.issue_num }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Remove sources to reclaim disk space
@@ -254,13 +254,7 @@ jobs:
 
       - name: Report build success
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid ${{ inputs.issue_num }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
-        continue-on-error: true
-
-      - name: Report test warning on build only
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Tests not ran' -rid ${{ github.run_id }} -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
     outputs:
@@ -380,9 +374,38 @@ jobs:
           cd build
           make -d ${{ inputs.mode }}
 
+      - name: Build test pending report
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Update test pending report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-pending
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ steps.test-pending.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry test pending report comment
+        if: ${{ steps.test-pending.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+
       - name: Report testing
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'pending' -context 'test' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Reinstall stage2
@@ -429,6 +452,36 @@ jobs:
           path: |
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
+
+      - name: Build test complete report
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Update test complete report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-complete
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ steps.test-complete.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry test complete report comment
+        if: ${{ steps.test-complete.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+
 
   # The self-hosted environment does not have the same path setup as the hosted runners
   # We need to rebuild since restoring the artifact won't work
@@ -555,6 +608,35 @@ jobs:
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
 
+      - name: Build test complete report
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Update test complete report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-complete
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ steps.test-complete.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry test complete report comment
+        if: ${{ steps.test-complete.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+
   # The self-hosted environment does not have the same path setup as the hosted runners
   # We need to rebuild since restoring the artifact won't work
   # (the new path will break the existing build).
@@ -631,41 +713,38 @@ jobs:
           sudo apt install python3 -y
           sudo apt install python-is-python3 -y
 
-      - name: Create pending issue
+      - name: Update build pending issue
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
-      - name: Create build report issue
-        uses: peter-evans/create-issue-from-file@v4
-        id: create-issue
+      - name: Update build pending report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-pending
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
         continue-on-error: true
 
       - name: backoff
-        if: ${{ steps.create-issue.outcome == 'failure' }}
+        if: ${{ steps.build-pending.outcome == 'failure' }}
         run: |
           sleep 10
 
-      - name: Retry issue update
-        if: ${{ steps.create-issue.outcome == 'failure' }}
-        uses: peter-evans/create-issue-from-file@v4
+      - name: Retry build pending report comment
+        if: ${{ steps.build-pending.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
 
       - name: Report build
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid ${{ inputs.issue_num }} -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Configure
@@ -695,9 +774,8 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
       - name: Zip build log
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -716,46 +794,43 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -patch ${{ inputs.patch_name }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
-      - name: Create build report issue
-        uses: peter-evans/create-issue-from-file@v4
+      - name: Update build complete report comment
         if: ${{ always() }}
-        id: update-issue
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-complete
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
         continue-on-error: true
 
       - name: backoff
-        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
         run: |
           sleep 10
 
-      - name: Retry issue update
-        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
-        uses: peter-evans/create-issue-from-file@v4
+      - name: Retry build complete report comment
+        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          content-filepath: riscv-gnu-toolchain/issue.md
-          issue-number: ${{ inputs.issue_num }}
-          title: 'Build GCC Status ${{ inputs.patch_name }}'
+          comment-id: ${{ inputs.build_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build failure' -iid ${{ inputs.issue_num }} -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Report build success
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'build success' -iid ${{ inputs.issue_num }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.build_comment_id }}' -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Zip binaries
@@ -770,16 +845,41 @@ jobs:
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip
           retention-days: 5
 
-      - name: Report test warning on build only
-        if: ${{ inputs.build_only == 'true' }}
+      - name: Build test starting report
+        if: ${{ inputs.build_only != 'true' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Tests not ran' -rid ${{ github.run_id }} -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Update test pending report comment
+        if: ${{ inputs.build_only != 'true' }}
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-pending
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
         continue-on-error: true
+
+      - name: backoff
+        if: ${{ inputs.build_only != 'true' && steps.test-pending.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry test pending report comment
+        if: ${{ inputs.build_only != 'true' && steps.test-pending.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
 
       - name: Report testing
         if: ${{ inputs.build_only != 'true' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'pending' -context 'test' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Run testsuite
@@ -825,3 +925,35 @@ jobs:
           path: |
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}-report.log
           retention-days: 90
+
+      - name: Build test complete report
+        if: ${{ inputs.build_only != 'true' }}
+        run: |
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Update test complete report comment
+        if: ${{ inputs.build_only != 'true' }}
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-complete
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ inputs.build_only != 'true' && steps.test-complete.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry test complete report comment
+        if: ${{ inputs.build_only != 'true' && steps.test-complete.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          comment-id: ${{ inputs.test_comment_id }}
+          comment-filepath: riscv-gnu-toolchain/comment.md
+

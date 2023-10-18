@@ -18,6 +18,16 @@ on:
       tot_hash:
         required: true
         type: string
+      issue_num:
+        required: true
+        type: string
+      build_comment_id:
+        required: true
+        type: string
+      test_comment_id:
+        required: true
+        type: string
+
   workflow_dispatch:
     branches:
       - patchworks-ci
@@ -160,7 +170,7 @@ jobs:
 
       - name: Search for build failures
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -patch ${{ inputs.patch_name }} -repo ewlu/gcc-precommit-ci -failure
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -comment ${{ inputs.build_comment_id }} -repo ewlu/gcc-precommit-ci -failure
           ls current_logs
         continue-on-error: true
 
@@ -277,8 +287,10 @@ jobs:
           python ./scripts/aggregate.py \
             -chash ${{ inputs.patch_applied_gcchash }} \
             -patch ${{ inputs.patch_name }} \
-            -o issue.md
-          cat issue.md
+            -o temp_comment.md
+          echo "## Testsuite Status" > comment.md
+          tail -n+5 temp_comment.md >> comment.md
+          cat comment.md
 
       - name: Print API usage info
         run: |
@@ -287,22 +299,21 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/rate_limit
 
-      - name: Trim issue length # reduce the number of lines in final issue so github always creates issue
+      - name: Trim comment length # reduce the number of lines in final comment so github always creates comment
         run: |
-          head -c 64000 issue.md > trimmed_issue.md
-          if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
-          run_id=${{ github.run_id }} && echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/$run_id" >> trimmed_issue.md
-          head -n 3 patches/${{ inputs.patch_name }} >> trimmed_issue.md
-          cat trimmed_issue.md
+          head -c 64000 comment.md > trimmed_comment.md
+          if [ $(cat trimmed_comment.md | wc -l) -ne $(cat comment.md | wc -l) ]; then printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; fi
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> trimmed_comment.md
+          cat trimmed_comment.md
 
-      - name: Create or update summary issue
-        uses: JasonEtco/create-an-issue@v2
-        id: create-issue
+      - name: Update test report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: riscv-gnu-toolchain/trimmed_issue.md
-          update_existing: true
+          comment-id: ${{ inputs.test_comment_id }}
+          body-path: riscv-gnu-toolchain/trimmed_comment.md
 
       - name: Output issue labels
         id: issue-labels
@@ -310,8 +321,8 @@ jobs:
           export LABELS=$(cat labels.txt)
           echo "issue_labels=$LABELS" >> $GITHUB_OUTPUT
 
-      - name: Add Build-Only Label to New Issue
-        if: ${{ inputs.build_only }}
+      - name: Add New regressions Label to Issue
+        if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'new-regressions') }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -319,26 +330,19 @@ jobs:
               issue_number: ${{ steps.create-issue.outputs.number }},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ['build-only']
+              labels: ['new-regressions']
             })
 
       - name: Report Failure
         if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'build-failure') || contains(steps.issue-labels.outputs.issue_labels, 'testsuite-failure') || contains(steps.issue-labels.outputs.issue_labels, 'new-regressions') }}
         id: report-failure
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing failed' -iid ${{ steps.create-issue.outputs.number }} -state 'fail' -context 'test' -token 'PLACEHOLDER'
-        continue-on-error: true
-
-      - name: Report Warning
-        if: ${{ steps.report-failure.outcome == 'skipped' && inputs.build_only == 'true' }}
-        id: report-warning
-        run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Build only. No tests ran' -iid ${{ steps.create-issue.outputs.number }} -state 'warning' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'fail' -context 'test' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Report Success
-        if: ${{ steps.report-failure.outcome == 'skipped' && steps.report-warning.outcome == 'skipped' }}
+        if: ${{ steps.report-failure.outcome == 'skipped' }}
         id: report-success
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing passed' -iid ${{ steps.create-issue.outputs.number }} -state 'success' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'success' -context 'test' -token 'PLACEHOLDER'
         continue-on-error: true

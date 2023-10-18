@@ -18,37 +18,62 @@ on:
       tot_hash:
         required: true
         type: string
+      issue_num:
+        required: true
+        type: string
 
 jobs:
-  build-issue:
+  initialize-comments:
     runs-on: ubuntu-20.04
     steps:
-      - name: Create build pending issue
+      - name: Create build pending comment
         run: |
-          printf -- "---\ntitle: Build GCC Status ${{ inputs.patch_name }}\n---\n" > issue.md
-          echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}" >> issue.md
+          echo "## Build GCC Status" > comment.md
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
 
-      - name: Create build report issue
-        uses: JasonEtco/create-an-issue@v2
-        id: create-issue
+      - name: Create build report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: issue.md
-          update_existing: true
+          issue-number: ${{ inputs.issue_num }}
+          body-path: comment.md
 
-      - name: Create build report issue
-        id: issue-number
+      - name: Create test waiting comment
         run: |
-          export ISSUE_NUMBER=${{ steps.create-issue.outputs.number }}
-          echo $ISSUE_NUMBER
-          echo "issue_num=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "## Testsuite Status" > comment.md
+          echo "Waiting for build to complete." >> comment.md
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Create build only report
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          echo "## Testsuite Status" > comment.md
+          echo "Testsuite tests were skipped. Patch did not apply to baseline hash https://github.com/gcc-mirror/gcc/commit/${{ inputs.baseline_hash }}. No comparison applicable." >> comment.md
+          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+
+      - name: Create build report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          issue-number: ${{ inputs.issue_num }}
+          body-path: comment.md
+
+      - name: Report test warning on build only
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
 
     outputs:
-      issue_num: ${{ steps.issue-number.outputs.issue_num }}
+      build_comment_id: ${{ steps.build-comment.outputs.comment-id }}
+      test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
 
   creg: # Check Regressions. Short name so I can see the matrix string in github
-    needs: [build-issue]
+    needs: [initialize-comments]
     strategy:
       fail-fast: false
       matrix:
@@ -73,12 +98,14 @@ jobs:
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
-      issue_num: ${{ needs.build-issue.outputs.issue_num }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
-    needs: [build-issue]
+    needs: [initialize-comments]
     strategy:
       fail-fast: false
       matrix:
@@ -95,12 +122,14 @@ jobs:
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
-      issue_num: ${{ needs.build-issue.outputs.issue_num }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: true
       tot_hash: ${{ inputs.tot_hash }}
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
-    needs: [build-issue]
+    needs: [initialize-comments]
     strategy:
       fail-fast: false
       matrix:
@@ -116,13 +145,15 @@ jobs:
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
-      issue_num: ${{ needs.build-issue.outputs.issue_num }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
-    needs: [build-issue, creg, cmreg, creg-sh]
+    needs: [initialize-comments, creg, cmreg, creg-sh]
     permissions:
       issues: write
     uses: ./.github/workflows/generate-precommit-summary.yaml
@@ -132,3 +163,6 @@ jobs:
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       build_only: ${{ inputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
