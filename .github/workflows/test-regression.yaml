@@ -443,7 +443,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - name: 'Cleanup build folder'
+      - name: Cleanup build folder
         working-directory: ./
         run: |
           ls -la ./
@@ -567,7 +567,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - name: 'Cleanup build folder'
+      - name: Cleanup build folder
         working-directory: ./
         run: |
           ls -la ./
