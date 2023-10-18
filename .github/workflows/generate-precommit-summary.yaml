@@ -112,7 +112,8 @@ jobs:
         run: |
           python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
           mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib-report.log
-          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-llp32d-${{ inputs.gcchash }}-multilib-report.log
+          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-multilib-report.log
+          ls previous_logs
         continue-on-error: true
 
       # Download all current workflow artifacts
