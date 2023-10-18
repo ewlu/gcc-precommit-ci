@@ -101,6 +101,23 @@ jobs:
 
       - name: Create build report issue
         uses: peter-evans/create-issue-from-file@v4
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ steps.create-issue.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry issue update
+        if: ${{ steps.create-issue.outcome == 'failure' }}
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -167,7 +184,23 @@ jobs:
 
       - name: Create build report issue
         uses: peter-evans/create-issue-from-file@v4
+        id: update-issue
         if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
+
+      - name: backoff
+        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry issue update
+        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -598,6 +631,23 @@ jobs:
 
       - name: Create build report issue
         uses: peter-evans/create-issue-from-file@v4
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ steps.create-issue.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry issue update
+        if: ${{ steps.create-issue.outcome == 'failure' }}
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -665,6 +715,23 @@ jobs:
       - name: Create build report issue
         uses: peter-evans/create-issue-from-file@v4
         if: ${{ always() }}
+        id: update-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          content-filepath: riscv-gnu-toolchain/issue.md
+          issue-number: ${{ inputs.issue_num }}
+          title: 'Build GCC Status ${{ inputs.patch_name }}'
+        continue-on-error: true
+
+      - name: backoff
+        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry issue update
+        if: ${{ always() && steps.update-issue.outcome == 'failure' }}
+        uses: peter-evans/create-issue-from-file@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
