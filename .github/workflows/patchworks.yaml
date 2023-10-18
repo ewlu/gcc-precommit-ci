@@ -74,11 +74,10 @@ jobs:
           cat date_old.txt
           cat date_recent.txt
 
-          mkdir -p patch_urls
-          mkdir -p patchworks_urls
-
       - name: Get list of new patches
         run: |
+          mkdir -p patch_urls
+          mkdir -p patchworks_urls
           python scripts/create_patches_files.py -backup $(cat date_older.txt) -start $(cat date_old.txt) -end $(cat date_recent.txt)
 
       - name: List patch artifacts
