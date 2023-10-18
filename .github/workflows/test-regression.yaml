@@ -257,6 +257,12 @@ jobs:
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid ${{ inputs.issue_num }} -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token 'PLACEHOLDER'
         continue-on-error: true
 
+      - name: Report test warning on build only
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Tests not ran' -rid ${{ github.run_id }} -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
+
     outputs:
       build_success: ${{ steps.build-success.outputs.build_success }}
 
@@ -376,7 +382,7 @@ jobs:
 
       - name: Report testing
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'testing start' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -rid ${{ github.run_id }} -state 'pending' -context 'test' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Reinstall stage2
@@ -763,6 +769,12 @@ jobs:
           path: |
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.patch_applied_gcchash }}-${{ inputs.multilib }}.zip
           retention-days: 5
+
+      - name: Report test warning on build only
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Tests not ran' -rid ${{ github.run_id }} -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
 
       - name: Report testing
         if: ${{ inputs.build_only != 'true' }}
