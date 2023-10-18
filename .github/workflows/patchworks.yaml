@@ -47,38 +47,35 @@ jobs:
 
       - name: Get timestamps and make directories
         run: |
-          TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
+          TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
           python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci
-          START_TIME=$(cat date_cur.txt)
-          TZ=UTC date -d "@$((($(date -d $START_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
-          TZ=UTC date -d "@$((($(date -d $START_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
-
-          echo $START_TIME
-          cat date_older.txt
-          cat date_old.txt
-          cat date_recent.txt
+          PRIOR_RUN_TIME=$(cat date_cur.txt)
+          TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_rounded.txt
+          TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_minus_15_min_rounded.txt
 
           cat runs.log
 
-          mkdir -p patch_urls
-          mkdir -p patchworks_urls
+          echo $PRIOR_RUN_TIME
+          cat prior_run_time_minus_15_min_rounded.txt
+          cat prior_run_time_rounded.txt
+          cat current_time_rounded.txt
 
       - name: Update times for workflow dispatch
         if: ${{ inputs.timestamp != '' }}
         run: |
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_recent.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_old.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1800) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > date_older.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_rounded.txt
+          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1800) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_minus_15_min_rounded.txt
 
-          cat date_older.txt
-          cat date_old.txt
-          cat date_recent.txt
+          cat prior_run_time_minus_15_min_rounded.txt
+          cat prior_run_time_rounded.txt
+          cat current_time_rounded.txt
 
       - name: Get list of new patches
         run: |
           mkdir -p patch_urls
           mkdir -p patchworks_urls
-          python scripts/create_patches_files.py -backup $(cat date_older.txt) -start $(cat date_old.txt) -end $(cat date_recent.txt)
+          python scripts/create_patches_files.py -backup $(cat prior_run_time_minus_15_min_rounded.txt) -start $(cat prior_run_time_rounded.txt) -end $(cat current_time_rounded.txt)
 
       - name: List patch artifacts
         id: list_patches
