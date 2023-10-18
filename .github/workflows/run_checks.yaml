@@ -48,16 +48,16 @@ jobs:
       - name: Download patchworks urls artifact
         uses: actions/download-artifact@v3
         with:
-          name: patchworks_urls
+          name: patchworks_metadata_files
           path: ./riscv-gnu-toolchain
 
       - name: Extract patch urls
         run: |
           unzip patch_files.zip
 
-      - name: Extract patchworks urls
+      - name: Extract patchworks metadata
         run: |
-          unzip patchworks_files.zip
+          unzip patchworks_metadata_files.zip
 
       - name: Create patches dir
         run: |
@@ -66,7 +66,7 @@ jobs:
       - name: Download patches from urls
         run: |
           scripts/download_patches.sh -p ${{ inputs.patch_name }}
-          mv patchworks_urls/${{ inputs.patch_name }} patches/
+          mv patchworks_metadata/${{ inputs.patch_name }} patches/
 
       - name: Zip patches
         run: |
