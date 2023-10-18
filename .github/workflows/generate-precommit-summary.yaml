@@ -34,7 +34,7 @@ on:
 
 jobs:
   compare-artifacts:
-    if: always() # ensure comparison always runs even on error
+    if: ${{ always() && inputs.build_only != 'true' }} # ensure comparison always runs even on error
     runs-on: ubuntu-20.04
     environment: production
     defaults:
@@ -205,7 +205,7 @@ jobs:
       workflow_dispatch: ${{ steps.dispatch.outputs.workflow_dispatch }}
 
   generate-issues:
-    if: always() # ensure generate issues always runs even on error
+    if: ${{ always() && inputs.build_only != 'true' }} # ensure generate issues always runs even on error
     needs: [compare-artifacts]
     runs-on: ubuntu-20.04
     permissions:
@@ -292,16 +292,6 @@ jobs:
           head -c 64000 issue.md > trimmed_issue.md
           if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
           run_id=${{ github.run_id }} && echo "Associated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/$run_id" >> trimmed_issue.md
-          cat trimmed_issue.md
-
-      - name: Update issue with tot hash
-        if: ${{ inputs.build_only }}
-        run: |
-          echo "Failed to apply ${{ inputs.patch_name }} cleanly to baseline hash ${{ inputs.baseline_hash }}. Patch applied cleanly to then tip-of-tree hash ${{ inputs.tot_hash }}" >> trimmed_issue.md
-          cat trimmed_issue.md
-
-      - name: Update issue with associated patches
-        run: |
           head -n 3 patches/${{ inputs.patch_name }} >> trimmed_issue.md
           cat trimmed_issue.md
 
