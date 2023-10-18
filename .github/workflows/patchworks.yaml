@@ -24,7 +24,7 @@ on:
 
 jobs:
   fetch_patches:
-    # Might need to set up a dedicated self hosted runner to always run this on time
+    # This is a dedicated self hosted runner that will always* run this on time
     runs-on: [self-hosted, ping]
     defaults:
       run:
