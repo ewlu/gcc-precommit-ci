@@ -75,6 +75,7 @@ jobs:
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [build-issue]
@@ -96,6 +97,7 @@ jobs:
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: true
+      tot_hash: ${{ inputs.tot_hash }}
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [build-issue]
@@ -116,6 +118,7 @@ jobs:
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
       run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build

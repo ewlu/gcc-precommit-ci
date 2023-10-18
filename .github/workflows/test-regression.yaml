@@ -30,6 +30,9 @@ on:
       run_on_self_hosted:
         required: true
         type: string
+      tot_hash:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -75,12 +78,11 @@ jobs:
           git fetch
           git checkout ${{ inputs.gcchash }}
 
-      - name: Checkout gcc hash
+      - name: Checkout trunk gcc hash
         if: ${{ inputs.build_only == 'true' }}
         run: |
           cd gcc
-          git reset --hard origin/master
-          git pull origin master
+          git checkout ${{ inputs.tot_hash }}
 
       - name: Apply patches
         run: |
