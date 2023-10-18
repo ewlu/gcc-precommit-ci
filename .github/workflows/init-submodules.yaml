@@ -13,8 +13,8 @@ on:
         required: false
         type: string
     outputs:
-        gcchash:
-          value: ${{ jobs.init-submodules.outputs.gcchash }}
+        baseline_hash:
+          value: ${{ jobs.init-submodules.outputs.baseline_hash }}
         tot_hash:
           value: ${{ jobs.init-submodules.outputs.tot_hash }}
 
@@ -34,13 +34,13 @@ jobs:
           git submodule update --init riscv-gnu-toolchain
 
       - name: Determine baseline
-        id: gcc-hash
+        id: baseline-hash
         run: |
           python ./scripts/get_baseline_hash.py -token ${{ secrets.GITHUB_TOKEN }}
 
-          if [ '${{ inputs.baseline_hash }}' == '' ] ; then export GCCHASH=$(cat baseline.txt); else export GCCHASH=${{ inputs.baseline_hash }}; fi
-          echo $GCCHASH
-          echo "gcchash=$GCCHASH" >> $GITHUB_OUTPUT
+          if [ '${{ inputs.baseline_hash }}' == '' ] ; then export BASELINE_HASH=$(cat baseline.txt); else export BASELINE_HASH=${{ inputs.baseline_hash }}; fi
+          echo $BASELINE_HASH
+          echo "baseline_hash=$BASELINE_HASH" >> $GITHUB_OUTPUT
 
       - name: Retrieve cache
         id: retrieve-cache
@@ -83,7 +83,7 @@ jobs:
       - name: Checkout baseline GCC hash
         working-directory: riscv-gnu-toolchain/gcc
         run: |
-          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
+          git checkout ${{ steps.baseline-hash.outputs.baseline_hash }}
 
       - name: Cache submodules
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
@@ -110,11 +110,11 @@ jobs:
       - name: Upload git cache
         uses: actions/upload-artifact@v3
         with:
-          name: gcc-sources-${{ steps.gcc-hash.outputs.gcchash }}
+          name: gcc-sources-${{ steps.baseline-hash.outputs.baseline_hash }}
           path: |
             riscv-gnu-toolchain/cache.zip
           retention-days: 5
 
     outputs:
-      gcchash: ${{ steps.gcc-hash.outputs.gcchash }}
+      baseline_hash: ${{ steps.baseline-hash.outputs.baseline_hash }}
       tot_hash: ${{ steps.tot-hash.outputs.tot_hash }}

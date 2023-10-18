@@ -12,7 +12,7 @@ on:
       target:
         required: true
         type: string
-      gcchash:
+      baseline_hash:
         required: true
         type: string
       patch_applied_gcchash:
@@ -53,7 +53,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -76,7 +76,7 @@ jobs:
         run: |
           cd gcc
           git fetch
-          git checkout ${{ inputs.gcchash }}
+          git checkout ${{ inputs.baseline_hash }}
 
       - name: Checkout trunk gcc hash
         if: ${{ inputs.build_only == 'true' }}
@@ -280,7 +280,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -303,7 +303,7 @@ jobs:
         run: |
           cd gcc
           git fetch
-          git checkout ${{ inputs.gcchash }}
+          git checkout ${{ inputs.baseline_hash }}
 
       - name: Apply patches to baseline
         run: |
@@ -455,7 +455,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -478,7 +478,7 @@ jobs:
         run: |
           cd gcc
           git fetch
-          git checkout ${{ inputs.gcchash }}
+          git checkout ${{ inputs.baseline_hash }}
 
       - name: Apply patches to baseline
         run: |
@@ -579,7 +579,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -602,7 +602,7 @@ jobs:
         run: |
           cd gcc
           git fetch
-          git checkout ${{ inputs.gcchash }}
+          git checkout ${{ inputs.baseline_hash }}
 
       - name: Checkout gcc hash
         if: ${{ inputs.build_only == 'true' }}

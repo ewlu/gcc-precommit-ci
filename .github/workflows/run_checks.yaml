@@ -6,7 +6,7 @@ on:
       patch_name:
         required: true
         type: string
-      gcchash: # Baseline gcc hash
+      baseline_hash: # Baseline gcc hash
         required: true
         type: string
       tot_hash: # Tip of tree gcc hash
@@ -30,7 +30,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -104,7 +104,7 @@ jobs:
       - name: Restore submodules from cache
         uses: actions/download-artifact@v3
         with:
-          name: gcc-sources-${{ inputs.gcchash }}
+          name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
 
       - name: Restore submodules
@@ -127,7 +127,7 @@ jobs:
         run: |
           cd gcc
           git fetch
-          git checkout ${{ inputs.gcchash }}
+          git checkout ${{ inputs.baseline_hash }}
 
       - name: Apply patches to baseline
         id: apply-baseline
@@ -182,7 +182,7 @@ jobs:
 
       - name: Build apply report
         run: |
-          python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.gcchash }} -thash ${{ inputs.tot_hash }} -bstatus ${{ steps.apply-baseline.outputs.apply_baseline }} -tstatus ${{ steps.apply-tip-of-tree.outputs.apply_tot }} -o issue.md
+          python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.baseline_hash }} -thash ${{ inputs.tot_hash }} -bstatus ${{ steps.apply-baseline.outputs.apply_baseline }} -tstatus ${{ steps.apply-tip-of-tree.outputs.apply_tot }} -o issue.md
           head -c 65000 issue.md > trimmed_issue.md
           if [ $(cat trimmed_issue.md | wc -l) -ne $(cat issue.md | wc -l) ]; then printf "\n\`\`\`\nIssue text has been trimmed. Please check logs for the untrimmed issue." >> trimmed_issue.md; fi
           printf "\nAssociated run is: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> trimmed_issue.md
@@ -211,14 +211,14 @@ jobs:
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied to tip of tree successfully.' -iid ${{ steps.update-issue.outputs.issue-number }} -state 'success' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
 
-      - name: Output new gcchash
+      - name: Output the hash after the patch has been applied
         id: new-gcc-hash
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' || steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
           cd gcc
           git reset --hard ${{ inputs.tot_hash }}
           if [ "${{ steps.apply-baseline.outputs.apply_baseline }}" == "true" ]; then
-            git checkout ${{ inputs.gcchash }}
+            git checkout ${{ inputs.baseline_hash }}
           fi
           git am ../patches/*.patch --whitespace=fix --3way
           export PATCH_APPLIED_GCCHASH=$(git rev-parse HEAD)
@@ -236,7 +236,7 @@ jobs:
     uses: ./.github/workflows/build-target.yaml
     with:
       patch_name: ${{ inputs.patch_name }}
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       build_only: ${{ needs.apply.outputs.build_only }}
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       tot_hash: ${{ inputs.tot_hash }}
