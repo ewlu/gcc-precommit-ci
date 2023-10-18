@@ -69,7 +69,7 @@ jobs:
           rm -rf gcc
           git clone git://gcc.gnu.org/git/gcc.git
 
-      - name: Checkout baseline GCC hash
+      - name: Determine tip-of-tree hash
         working-directory: riscv-gnu-toolchain/gcc
         id: tot-hash
         run: |
@@ -77,9 +77,13 @@ jobs:
           git pull
           if [ ${{ inputs.tot_hash }} != '']; then git checkout ${{ inputs.tot_hash }}; fi
           export TOT_HASH=$(git rev-parse HEAD)
-          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
           echo $TOT_HASH
           echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
+
+      - name: Checkout baseline GCC hash
+        working-directory: riscv-gnu-toolchain/gcc
+        run: |
+          git checkout ${{ steps.gcc-hash.outputs.gcchash }}
 
       - name: Cache submodules
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
