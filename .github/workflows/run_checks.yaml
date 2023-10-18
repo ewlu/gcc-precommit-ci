@@ -221,14 +221,14 @@ jobs:
             git checkout ${{ inputs.gcchash }}
           fi
           git am ../patches/*.patch --whitespace=fix --3way
-          export NEW_GCCHASH=$(git rev-parse HEAD)
-          echo $NEW_GCCHASH
-          echo "new_gcchash=$NEW_GCCHASH" >> $GITHUB_OUTPUT
+          export PATCH_APPLIED_GCCHASH=$(git rev-parse HEAD)
+          echo $PATCH_APPLIED_GCCHASH
+          echo "patch_applied_gcchash=$PATCH_APPLIED_GCCHASH" >> $GITHUB_OUTPUT
 
     outputs:
       early_exit: ${{ steps.early-exit.outputs.early_exit }}
       build_only: ${{ steps.build-only.outputs.build_only }}
-      new_gcchash: ${{ steps.new-gcc-hash.outputs.new_gcchash }}
+      patch_applied_gcchash: ${{ steps.new-gcc-hash.outputs.patch_applied_gcchash }}
 
   build_test:
     needs: [download_patches, apply]
@@ -238,5 +238,5 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       gcchash: ${{ inputs.gcchash }}
       build_only: ${{ needs.apply.outputs.build_only }}
-      new_gcchash: ${{ needs.apply.outputs.new_gcchash }}
+      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       tot_hash: ${{ inputs.tot_hash }}

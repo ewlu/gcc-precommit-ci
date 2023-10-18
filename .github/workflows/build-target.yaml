@@ -12,7 +12,7 @@ on:
       build_only:
         required: true
         type: string
-      new_gcchash:
+      patch_applied_gcchash:
         required: true
         type: string
       tot_hash:
@@ -70,7 +70,7 @@ jobs:
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
       gcchash: ${{ inputs.gcchash }}
-      new_gcchash: ${{ inputs.new_gcchash }}
+      patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
@@ -91,7 +91,7 @@ jobs:
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
       gcchash: ${{ inputs.gcchash }}
-      new_gcchash: ${{ inputs.new_gcchash }}
+      patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
@@ -111,7 +111,7 @@ jobs:
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
       gcchash: ${{ inputs.gcchash }}
-      new_gcchash: ${{ inputs.new_gcchash }}
+      patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
       issue_num: ${{ needs.build-issue.outputs.issue_num }}
@@ -126,6 +126,6 @@ jobs:
     with:
       patch_name: ${{ inputs.patch_name }}
       gcchash: ${{ inputs.gcchash }}
-      new_gcchash: ${{ inputs.new_gcchash }}
+      patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       build_only: ${{ inputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}

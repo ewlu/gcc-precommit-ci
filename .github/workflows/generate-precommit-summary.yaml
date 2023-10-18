@@ -9,7 +9,7 @@ on:
       gcchash:
         required: true
         type: string
-      new_gcchash:
+      patch_applied_gcchash:
         required: true
         type: string
       build_only:
@@ -25,7 +25,7 @@ on:
       gcchash:
         description: 'GCC Hash'
         required: true
-      new_gcchash:
+      patch_applied_gcchash:
         description: 'GCC Hash of applied commit'
         required: true
       patch_name:
@@ -128,7 +128,7 @@ jobs:
       - name: Download All targets
         uses: ./.github/actions/download-all-comparison-artifacts
         with:
-          gcchash: ${{ inputs.new_gcchash }}
+          gcchash: ${{ inputs.patch_applied_gcchash }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: 'ewlu/gcc-precommit-ci'
 
@@ -156,7 +156,7 @@ jobs:
       - name: Compare artifacts
         run: |
           ls current_logs
-          python ./scripts/compare_all_artifacts.py -hash ${{ inputs.new_gcchash }}
+          python ./scripts/compare_all_artifacts.py -hash ${{ inputs.patch_applied_gcchash }}
 
       - name: Search for build failures
         run: |
@@ -275,7 +275,7 @@ jobs:
           unzip current_logs.zip
           unzip previous_logs.zip
           python ./scripts/aggregate.py \
-            -chash ${{ inputs.new_gcchash }} \
+            -chash ${{ inputs.patch_applied_gcchash }} \
             -patch ${{ inputs.patch_name }} \
             -o issue.md
           cat issue.md
