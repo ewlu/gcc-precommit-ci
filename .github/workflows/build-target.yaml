@@ -6,7 +6,7 @@ on:
       patch_name:
         required: true
         type: string
-      gcchash:
+      baseline_hash:
         required: true
         type: string
       build_only:
@@ -69,7 +69,7 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
@@ -91,7 +91,7 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
@@ -112,7 +112,7 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
       build_only: ${{ inputs.build_only }}
@@ -128,7 +128,7 @@ jobs:
     uses: ./.github/workflows/generate-precommit-summary.yaml
     with:
       patch_name: ${{ inputs.patch_name }}
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       build_only: ${{ inputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}

@@ -6,7 +6,7 @@ on:
       patch_name:
         required: true
         type: string
-      gcchash:
+      baseline_hash:
         required: true
         type: string
       patch_applied_gcchash:
@@ -22,7 +22,7 @@ on:
     branches:
       - patchworks-ci
     inputs:
-      gcchash:
+      baseline_hash:
         description: 'GCC Hash'
         required: true
       patch_applied_gcchash:
@@ -100,7 +100,7 @@ jobs:
       - name: Download baseline results
         run: |
           pip install pygithub==1.59.1 requests
-          python ./scripts/download_artifact.py -name ${{ inputs.gcchash }}-current-logs -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name ${{ inputs.baseline_hash }}-current-logs -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
 
       - name: Extract baseline results
         run: |
@@ -111,8 +111,8 @@ jobs:
       - name: Separate multilib results
         run: |
           python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
-          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib-report.log
-          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.gcchash }}-multilib-report.log
+          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
+          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
           ls previous_logs
         continue-on-error: true
 
@@ -179,7 +179,7 @@ jobs:
       - name: Upload compare summaries
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.gcchash }}-summaries
+          name: ${{ inputs.baseline_hash }}-summaries
           path: |
             riscv-gnu-toolchain/summaries.zip
           retention-days: 90
@@ -187,7 +187,7 @@ jobs:
       - name: Upload current log failures
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.gcchash }}-current-logs
+          name: ${{ inputs.baseline_hash }}-current-logs
           path: |
             riscv-gnu-toolchain/current_logs.zip
           retention-days: 90
@@ -195,13 +195,13 @@ jobs:
       - name: Upload baseline results
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.gcchash }}-previous-logs
+          name: ${{ inputs.baseline_hash }}-previous-logs
           path: |
             riscv-gnu-toolchain/previous_logs.zip
           retention-days: 90
 
     outputs:
-      gcchash: ${{ inputs.gcchash }}
+      baseline_hash: ${{ inputs.baseline_hash }}
       workflow_dispatch: ${{ steps.dispatch.outputs.workflow_dispatch }}
 
   generate-issues:
@@ -224,19 +224,19 @@ jobs:
       - name: Download summaries artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.gcchash }}-summaries
+          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-summaries
           path: ./riscv-gnu-toolchain
 
       - name: Download current logs artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.gcchash }}-current-logs
+          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-current-logs
           path: ./riscv-gnu-toolchain
 
       - name: Download previous logs artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.gcchash }}-previous-logs
+          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-previous-logs
           path: ./riscv-gnu-toolchain
 
       - name: Download patches artifact
@@ -297,7 +297,7 @@ jobs:
       - name: Update issue with tot hash
         if: ${{ inputs.build_only }}
         run: |
-          echo "Failed to apply ${{ inputs.patch_name }} cleanly to baseline hash ${{ inputs.gcchash }}. Patch applied cleanly to then tip-of-tree hash ${{ inputs.tot_hash }}" >> trimmed_issue.md
+          echo "Failed to apply ${{ inputs.patch_name }} cleanly to baseline hash ${{ inputs.baseline_hash }}. Patch applied cleanly to then tip-of-tree hash ${{ inputs.tot_hash }}" >> trimmed_issue.md
           cat trimmed_issue.md
 
       - name: Update issue with associated patches
