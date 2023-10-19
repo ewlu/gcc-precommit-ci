@@ -314,6 +314,7 @@ jobs:
         with:
           comment-id: ${{ inputs.test_comment_id }}
           body-path: riscv-gnu-toolchain/trimmed_comment.md
+          edit-mode: replace
 
       - name: Output issue labels
         id: issue-labels
