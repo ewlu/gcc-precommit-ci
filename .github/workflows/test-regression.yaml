@@ -113,7 +113,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -128,7 +129,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report build
         run: |
@@ -193,7 +195,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -208,7 +211,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -386,7 +390,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -401,7 +406,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report testing
         run: |
@@ -465,7 +471,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -480,7 +487,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
 
   # The self-hosted environment does not have the same path setup as the hosted runners
@@ -620,7 +628,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -635,7 +644,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
   # The self-hosted environment does not have the same path setup as the hosted runners
   # We need to rebuild since restoring the artifact won't work
@@ -725,7 +735,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -740,7 +751,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report build
         run: |
@@ -805,7 +817,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -820,7 +833,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.build_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
@@ -859,7 +873,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -874,7 +889,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
       - name: Report testing
         if: ${{ inputs.build_only != 'true' }}
@@ -940,7 +956,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
         continue-on-error: true
 
       - name: backoff
@@ -955,5 +972,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.test_comment_id }}
-          comment-filepath: riscv-gnu-toolchain/comment.md
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 

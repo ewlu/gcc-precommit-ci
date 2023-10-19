@@ -82,6 +82,7 @@ jobs:
         with:
           comment-id: ${{ inputs.lint_comment_id }}
           body-path: riscv-gnu-toolchain/trimmed_comment.md
+          edit-mode: replace
 
       - name: Add linter-failure Label to issue
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
@@ -115,6 +116,7 @@ jobs:
         with:
           comment-id: ${{ inputs.lint_comment_id }}
           body-path: riscv-gnu-toolchain/lint_passed.md
+          edit-mode: replace
 
       - name: Report linter success
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}

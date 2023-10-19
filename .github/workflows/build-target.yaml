@@ -39,6 +39,7 @@ jobs:
         with:
           issue-number: ${{ inputs.issue_num }}
           body-path: comment.md
+          edit-mode: replace
 
       - name: Create test waiting comment
         run: |
@@ -61,6 +62,7 @@ jobs:
         with:
           issue-number: ${{ inputs.issue_num }}
           body-path: comment.md
+          edit-mode: replace
 
       - name: Report test warning on build only
         if: ${{ inputs.build_only == 'true' }}

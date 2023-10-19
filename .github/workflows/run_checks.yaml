@@ -135,6 +135,7 @@ jobs:
         with:
           issue-number: ${{ steps.create-issue.outputs.issue-number }}
           body-path: riscv-gnu-toolchain/lint_pending.md
+          edit-mode: replace
 
       - name: Create apply pending report
         run: |
@@ -149,6 +150,7 @@ jobs:
         with:
           issue-number: ${{ steps.create-issue.outputs.issue-number }}
           body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
 
     outputs:
       issue_num: ${{ steps.create-issue.outputs.issue-number }}
@@ -285,6 +287,7 @@ jobs:
         with:
           comment-id: ${{ needs.create-issue.outputs.apply_comment_id }}
           body-path: riscv-gnu-toolchain/trimmed_comment.md
+          edit-mode: replace
 
       - name: Report patch failed to apply to tip of tree
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
