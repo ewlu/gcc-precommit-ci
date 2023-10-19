@@ -79,14 +79,22 @@ jobs:
           path: |
             riscv-gnu-toolchain/${{ inputs.patch_name }}-downloaded-patches.zip
           retention-days: 90
-  
+
   create-issue:
     needs: [download_patches]
     runs-on: ubuntu-20.04
     permissions:
       issues: write
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
     steps:
       - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          free_up_space: false
 
       - name: Download patches artifact
         uses: actions/download-artifact@v3
@@ -136,7 +144,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ steps.create-issue.outputs.issue-number }}
-          body-path: comment.md
+          body-path: riscv-gnu-toolchain/comment.md
 
     outputs:
       issue_num: ${{ steps.create-issue.outputs.issue-number }}
