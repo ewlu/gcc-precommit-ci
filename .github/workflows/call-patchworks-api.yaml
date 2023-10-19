@@ -8,7 +8,7 @@ jobs:
   get-patch-info:
     runs-on: ubuntu-20.04
     environment: production
-    if: ${{ !github.event.issue.pull_request && (contains(github.event.comment.body, '/pass') || contains(github.event.comment.body, '/warn') || contains(github.event.comment.body, '/error')) && (github.event.comment.user.login == 'ewlu' || github.event.comment.user.login == 'patrick-rivos') }}
+    if: ${{ !github.event.issue.pull_request && (contains(github.event.comment.body, '/pass_') || contains(github.event.comment.body, '/warn_') || contains(github.event.comment.body, '/error_')) && (github.event.comment.user.login == 'ewlu' || github.event.comment.user.login == 'patrick-rivos') }}
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -39,12 +39,14 @@ jobs:
       - name: Get check
         id: check
         run: |
-          export title="${{ github.event.issue.title }}"
-          export CHECK=$(echo ${title%% *})
-          export CONTEXT=$(echo $CHECK | tr '[:upper:]' '[:lower:]')
+          export temp=$(echo ${{ github.event.comment.body }} | cut -d '_' -f 2)
+          export CONTEXT=$(echo ${temp%% *})
+          if [ $CONTEXT == 'test' ]; then export CHECK=Testing; fi
+          if [ $CONTEXT == 'apply' ]; then export CHECK=Apply; fi
+          if [ $CONTEXT == 'build' ]; then export CHECK=Build; fi
+          if [ $CONTEXT == 'lint' ]; then export CHECK=Lint; fi
           echo $CHECK
           echo $CONTEXT
-          if [ $CHECK == 'Testsuite' ]; then export CONTEXT=test; export CHECK=Testing; fi
           echo "check=$CHECK" >> $GITHUB_OUTPUT
           echo "context=$CONTEXT" >> $GITHUB_OUTPUT
 
