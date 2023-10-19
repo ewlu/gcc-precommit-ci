@@ -105,7 +105,7 @@ jobs:
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'warning' -context 'linter' -token 'PLACEHOLDER'
 
       - name: Make lint passed comment
-        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        if: ${{ steps.lint.outputs.lint_failed == 'false' }}
         run: |
           echo "## Lint Status" > lint_passed.md
           echo "Lint passed" >> lint_passed.md
