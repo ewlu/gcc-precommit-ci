@@ -28,11 +28,21 @@ on:
 jobs:
   initialize-comments:
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
     steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/setup-env
+        with:
+          free_up_space: false
+
       - name: Create build pending comment
         run: |
-          echo "## Build GCC Status" > comment.md
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
+          echo "## Build GCC Status" > build_pending_comment.md
+          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> build_pending_comment.md
 
       - name: Create build report comment
         uses: peter-evans/create-or-update-comment@v3
@@ -41,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ inputs.issue_num }}
-          body-path: comment.md
+          body-path: build_pending_comment.md
           edit-mode: replace
 
       - name: Create test waiting comment
