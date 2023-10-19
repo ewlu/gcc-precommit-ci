@@ -67,7 +67,7 @@ jobs:
         id: lint
         run: |
           let count=$(ls -1 patches | wc -l)
-          python ./gcc/contrib/check_GNU_style.py "./patches/patch-$count.patch" | tee "lint_results.txt"
+          python ./gcc/contrib/check_GNU_style.py "./patches/patch-$count.patch" 2>&1 | tee "lint_results.txt"
           if (($(cat lint_results.txt | wc -l) > 0)); then
             echo "lint_failed=true" >> $GITHUB_OUTPUT
           else
