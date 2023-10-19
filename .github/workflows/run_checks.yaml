@@ -126,10 +126,10 @@ jobs:
         run: |
           sleep 1
           curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Token ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }} | jq '.id' > issue_body_comment_id.txt
-          export LINK=https://github.com/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }}#issue-$(cat issue_body_comment_id.txt) 
+          export LINK=https://github.com/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }}#issue-$(cat issue_body_comment_id.txt)
           echo $LINK
           echo "additional=$LINK" >> $GITHUB_OUTPUT
-          
+
 
       - name: Make lint pending comment
         run: |
@@ -177,6 +177,7 @@ jobs:
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
       lint_comment_id: ${{ needs.create-issue.outputs.lint_comment_id }}
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
+      baseline_hash: ${{ inputs.baseline_hash }}
 
   apply:
     needs: [download_patches, create-issue]

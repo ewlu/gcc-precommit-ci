@@ -15,6 +15,9 @@ on:
       additional_info:
         required: true
         type: string
+      baseline_hash:
+        required: true
+        type: string
 
 jobs:
   lint:
