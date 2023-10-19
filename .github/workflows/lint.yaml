@@ -32,6 +32,18 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Restore submodules from cache
+        uses: actions/download-artifact@v3
+        with:
+          name: gcc-sources-${{ inputs.baseline_hash }}
+          path: ./riscv-gnu-toolchain
+
+      - name: Restore submodules
+        run: |
+          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
+          unzip cache.zip
+          rm -rf cache.zip
+
       - name: Download patches artifact
         uses: actions/download-artifact@v3
         with:
@@ -55,7 +67,7 @@ jobs:
         id: lint
         run: |
           let count=$(ls -1 patches | wc -l)
-          python ./scripts/check_GNU_style.py "./patches/patch-$count.patch" | tee "lint_results.txt"
+          python ./gcc/contrib/check_GNU_style.py "./patches/patch-$count.patch" | tee "lint_results.txt"
           if (($(cat lint_results.txt | wc -l) > 0)); then
             echo "lint_failed=true" >> $GITHUB_OUTPUT
           else
