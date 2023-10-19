@@ -122,7 +122,6 @@ jobs:
           title: 'Patch Status ${{ inputs.patch_name }}'
 
       - name: Make lint pending comment
-        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
         run: |
           echo "## Lint Status" > lint_pending.md
           echo "Lint pending" >> lint_pending.md
