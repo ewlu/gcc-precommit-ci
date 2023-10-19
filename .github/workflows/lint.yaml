@@ -12,6 +12,9 @@ on:
       lint_comment_id:
         required: true
         type: string
+      additional_info:
+        required: true
+        type: string
 
 jobs:
   lint:
@@ -71,7 +74,7 @@ jobs:
           cat linter_fail_report.md >> comment.md
           head -c 65000 comment > trimmed_comment.md
           if [ $(cat trimmed_comment.md | wc -l) -ne $(cat comment.md | wc -l) ]; then printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; fi
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> trimmed_comment.md
+          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
 
       - name: Update lint failed comment report
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
@@ -97,7 +100,7 @@ jobs:
             })
 
       - name: Report linter warning
-        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.lint.outputs.lint_failed == 'true' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'warning' -context 'linter' -token 'PLACEHOLDER'
 
@@ -119,7 +122,7 @@ jobs:
           edit-mode: replace
 
       - name: Report linter success
-        if: ${{ steps.lint.outputs.lint_failed == 'false' }}
+        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.lint.outputs.lint_failed == 'false' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'success' -context 'linter' -token 'PLACEHOLDER'
 

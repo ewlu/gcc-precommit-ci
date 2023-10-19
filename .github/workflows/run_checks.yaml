@@ -121,6 +121,16 @@ jobs:
           content-filepath: riscv-gnu-toolchain/issue.md
           title: 'Patch Status ${{ inputs.patch_name }}'
 
+      - name: Build additional info link
+        id: link
+        run: |
+          sleep 1
+          curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Token ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }} | jq '.id' > issue_body_comment_id.txt
+          export LINK=https://github.com/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }}#issue-$(cat issue_body_comment_id.txt) 
+          echo $LINK
+          echo "additional=$LINK" >> $GITHUB_OUTPUT
+          
+
       - name: Make lint pending comment
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
         run: |
@@ -140,7 +150,7 @@ jobs:
       - name: Create apply pending report
         run: |
           python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.baseline_hash }} -thash ${{ inputs.tot_hash }} -bstatus pending -tstatus pending -o comment.md
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ steps.create-issue.outputs.issue-number }})\n" >> comment.md
+          printf "\n[Additional information](${{ steps.link.outputs.additional }})\n" >> comment.md
 
       - name: Create apply report comment
         uses: peter-evans/create-or-update-comment@v3
@@ -156,6 +166,7 @@ jobs:
       issue_num: ${{ steps.create-issue.outputs.issue-number }}
       lint_comment_id: ${{ steps.lint-comment.outputs.comment-id }}
       apply_comment_id: ${{ steps.apply-comment.outputs.comment-id }}
+      additional_info: ${{ steps.link.outputs.additional }}
 
   lint:
     needs: [download_patches, create-issue]
@@ -166,6 +177,7 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
       lint_comment_id: ${{ needs.create-issue.outputs.lint_comment_id }}
+      additional_info: ${{ needs.create-issue.outputs.additional_info }}
 
   apply:
     needs: [download_patches, create-issue]
@@ -277,7 +289,7 @@ jobs:
           python scripts/generate_apply_report.py -patch ${{ inputs.patch_name }} -bhash ${{ inputs.baseline_hash }} -thash ${{ inputs.tot_hash }} -bstatus ${{ steps.apply-baseline.outputs.apply_baseline }} -tstatus ${{ steps.apply-tip-of-tree.outputs.apply_tot }} -o comment.md
           head -c 65000 comment.md > trimmed_comment.md
           if [ $(cat trimmed_comment.md | wc -l) -ne $(cat comment.md | wc -l) ]; then printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; fi
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ needs.create-issue.outputs.issue_num }})\n" >> trimmed_comment.md
+          printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> trimmed_comment.md
 
       - name: Update apply report comment
         uses: peter-evans/create-or-update-comment@v3
@@ -290,13 +302,13 @@ jobs:
           edit-mode: replace
 
       - name: Report patch failed to apply to tip of tree
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch did not apply to tip of tree.' -iid '${{ needs.create-issue.outputs.issue_number }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'warning' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Report patch applied to tip of tree successfully
-        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied to tip of tree successfully.' -iid '${{ needs.create-issue.outputs.issue_num }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'success' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
@@ -331,3 +343,4 @@ jobs:
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       tot_hash: ${{ inputs.tot_hash }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
+      additional_info: ${{ needs.create-issue.outputs.additional_info }}
