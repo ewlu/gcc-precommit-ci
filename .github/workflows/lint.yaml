@@ -100,6 +100,12 @@ jobs:
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'warning' -context 'linter' -token 'PLACEHOLDER'
 
+      - name: Make lint passed comment
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        run: |
+          echo "## Lint Status" > lint_passed.md
+          echo "Lint passed" >> lint_passed.md
+
       - name: Update lint passed comment report
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}
         uses: peter-evans/create-or-update-comment@v3
@@ -108,9 +114,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ inputs.lint_comment_id }}
-          body: |
-            '## Lint Status'
-            Lint passed
+          body-path: riscv-gnu-toolchain/lint_passed.md
 
       - name: Report linter success
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}

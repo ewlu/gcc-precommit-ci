@@ -121,6 +121,12 @@ jobs:
           content-filepath: riscv-gnu-toolchain/issue.md
           title: 'Patch Status ${{ inputs.patch_name }}'
 
+      - name: Make lint pending comment
+        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        run: |
+          echo "## Lint Status" > lint_pending.md
+          echo "Lint pending" >> lint_pending.md
+
       - name: Create lint report comment
         uses: peter-evans/create-or-update-comment@v3
         id: lint-comment
@@ -128,9 +134,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ steps.create-issue.outputs.issue-number }}
-          body: |
-            '## Lint Status'
-            Lint pending
+          body-path: riscv-gnu-toolchain/lint_pending.md
 
       - name: Create apply pending report
         run: |
