@@ -21,6 +21,9 @@ on:
       issue_num:
         required: true
         type: string
+      additional_info:
+        required: true
+        type: string
 
 jobs:
   initialize-comments:
@@ -29,7 +32,7 @@ jobs:
       - name: Create build pending comment
         run: |
           echo "## Build GCC Status" > comment.md
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Create build report comment
         uses: peter-evans/create-or-update-comment@v3
@@ -45,14 +48,14 @@ jobs:
         run: |
           echo "## Testsuite Status" > comment.md
           echo "Waiting for build to complete." >> comment.md
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Create build only report
         if: ${{ inputs.build_only == 'true' }}
         run: |
           echo "## Testsuite Status" > comment.md
           echo "Testsuite tests were skipped. Patch did not apply to baseline hash https://github.com/gcc-mirror/gcc/commit/${{ inputs.baseline_hash }}. No comparison applicable." >> comment.md
-          printf "\n[Additional information](https://github.com/ewlu/gcc-precommit-ci/issues/${{ inputs.issue_num }})\n" >> comment.md
+          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Create build report comment
         uses: peter-evans/create-or-update-comment@v3
@@ -65,7 +68,7 @@ jobs:
           edit-mode: replace
 
       - name: Report test warning on build only
-        if: ${{ inputs.build_only == 'true' }}
+        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && inputs.build_only == 'true' }}
         run: |
           python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issue-${{ inputs.test_comment_id }}' -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
@@ -105,6 +108,7 @@ jobs:
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [initialize-comments]
@@ -129,6 +133,7 @@ jobs:
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: true
       tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
@@ -152,6 +157,7 @@ jobs:
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
@@ -168,3 +174,4 @@ jobs:
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
+      additional_info: ${{ inputs.additional_info }}
