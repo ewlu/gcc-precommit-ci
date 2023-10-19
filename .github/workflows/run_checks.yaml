@@ -280,7 +280,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           comment-id: ${{ needs.create-issue.outputs.apply_comment_id }}
-          body-path: comment.md
+          body-path: riscv-gnu-toolchain/trimmed_comment.md
 
       - name: Report patch failed to apply to tip of tree
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
