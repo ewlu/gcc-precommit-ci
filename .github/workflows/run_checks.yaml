@@ -108,9 +108,9 @@ jobs:
 
       - name: Build initial issue
         run: |
-          printf "# Precommit CI Run information\n" > issue.md
+          printf "## Precommit CI Run information\n" > issue.md
           printf "Logs can be found in the associated Github Actions run: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
-          printf "# Patch information\n" >> issue.md
+          printf "## Patch information\n" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
           cat issue.md
 
