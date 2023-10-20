@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "## Lint Status" > comment.md
           cat linter_fail_report.md >> comment.md
-          head -c 65000 comment > trimmed_comment.md
+          head -c 65000 comment.md > trimmed_comment.md
           if [ $(cat trimmed_comment.md | wc -l) -ne $(cat comment.md | wc -l) ]; then printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
 

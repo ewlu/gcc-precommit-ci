@@ -51,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ inputs.issue_num }}
-          body-path: build_pending_comment.md
+          body-path: riscv-gnu-toolchain/build_pending_comment.md
           edit-mode: replace
 
       - name: Create test waiting comment
