@@ -88,9 +88,9 @@ jobs:
           edit-mode: replace
 
       - name: Report test warning on build only
-        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && inputs.build_only == 'true' }}
+        if: ${{ inputs.build_only == 'true' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issue-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issue-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token 'PLACEHOLDER' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
 
     outputs:
