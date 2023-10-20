@@ -63,7 +63,7 @@ jobs:
 
       - name: Report start linter
         run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint starting' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'pending' -context 'lint' -token '${{ secrets.PATCHWORK_API }}'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint starting' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'pending' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
 
       # Only lint the last patch in the series since that's where the warning will be displayed
       - name: Lint patch
@@ -118,7 +118,7 @@ jobs:
       - name: Report linter warning
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
         run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'warning' -context 'lint' -token '${{ secrets.PATCHWORK_API }}'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'warning' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
 
       - name: Make lint passed comment
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}
@@ -140,4 +140,4 @@ jobs:
       - name: Report linter success
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}
         run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'success' -context 'lint' -token '${{ secrets.PATCHWORK_API }}'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint passed' -iid '${{ inputs.issue_num }}#issue-${{ inputs.lint_comment_id }}' -state 'success' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
