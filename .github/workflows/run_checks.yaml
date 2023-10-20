@@ -304,15 +304,15 @@ jobs:
           edit-mode: replace
 
       - name: Report patch failed to apply to tip of tree
-        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch did not apply to tip of tree.' -iid '${{ needs.create-issue.outputs.issue_number }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'warning' -context 'apply-patch' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch did not apply to tip of tree.' -iid '${{ needs.create-issue.outputs.issue_number }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'warning' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Report patch applied to tip of tree successfully
-        if: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
-          python scripts/post_check_to_patchworks.py -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied to tip of tree successfully.' -iid '${{ needs.create-issue.outputs.issue_num }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'success' -context 'apply-patch' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied to tip of tree successfully.' -iid '${{ needs.create-issue.outputs.issue_num }}#issue-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'success' -context 'apply-patch' -token 'PLACEHOLDER'
         continue-on-error: true
 
       - name: Output the hash after the patch has been applied
