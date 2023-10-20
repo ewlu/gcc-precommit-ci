@@ -51,7 +51,7 @@ jobs:
 
       - name: Create build pending comment
         run: |
-          echo "## Build GCC Status" > build_pending_comment.md
+          echo "## Build GCC Status (Beta - Ignore Results)" > build_pending_comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> build_pending_comment.md
 
       - name: Create build report comment
@@ -66,14 +66,14 @@ jobs:
 
       - name: Create test waiting comment
         run: |
-          echo "## Testsuite Status" > comment.md
+          echo "## Testsuite Status (Beta - Ignore Results)" > comment.md
           echo "Waiting for build to complete." >> comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Create build only report
         if: ${{ inputs.build_only == 'true' }}
         run: |
-          echo "## Testsuite Status" > comment.md
+          echo "## Testsuite Status (Beta - Ignore Results)" > comment.md
           echo "Testsuite tests were skipped. Patch did not apply to baseline hash https://github.com/gcc-mirror/gcc/commit/${{ inputs.baseline_hash }}. No comparison applicable." >> comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
