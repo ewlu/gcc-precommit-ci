@@ -74,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ inputs.issue_num }}
-          body-path: comment.md
+          body-path: riscv-gnu-toolchain/comment.md
           edit-mode: replace
 
       - name: Report test warning on build only
