@@ -39,6 +39,16 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
       - name: Create build pending comment
         run: |
           echo "## Build GCC Status" > build_pending_comment.md
