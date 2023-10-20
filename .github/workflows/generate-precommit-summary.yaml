@@ -291,7 +291,7 @@ jobs:
             -chash ${{ inputs.patch_applied_gcchash }} \
             -patch ${{ inputs.patch_name }} \
             -o temp_comment.md
-          echo "## Testsuite Status" > comment.md
+          echo "## Testsuite Status (Beta - Ignore Results)" > comment.md
           tail -n+5 temp_comment.md >> comment.md
           cat comment.md
 
