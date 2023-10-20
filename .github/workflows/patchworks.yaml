@@ -45,6 +45,12 @@ jobs:
         run: |
           git submodule update --init riscv-gnu-toolchain
 
+      - name: Install dependencies
+        run: |
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+          sudo apt install zip -y
+
       - name: Get timestamps and make directories
         run: |
           TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
