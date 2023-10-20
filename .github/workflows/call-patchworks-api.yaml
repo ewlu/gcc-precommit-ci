@@ -42,7 +42,7 @@ jobs:
           export temp=$(echo ${{ github.event.comment.body }} | cut -d '_' -f 2)
           export CONTEXT=$(echo ${temp%% *})
           if [ $CONTEXT == 'test' ]; then export CHECK=Testing; fi
-          if [ $CONTEXT == 'apply' ]; then export CHECK=Apply; fi
+          if [ $CONTEXT == 'apply' ]; then export CHECK=Apply; export CONTEXT=apply-patch;  fi
           if [ $CONTEXT == 'build' ]; then export CHECK=Build; fi
           if [ $CONTEXT == 'lint' ]; then export CHECK=Lint; fi
           echo $CHECK
