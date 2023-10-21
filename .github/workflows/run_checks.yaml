@@ -182,6 +182,7 @@ jobs:
       lint_comment_id: ${{ needs.create-issue.outputs.lint_comment_id }}
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
       baseline_hash: ${{ inputs.baseline_hash }}
+    secrets: inherit
 
   apply:
     needs: [download_patches, create-issue]
