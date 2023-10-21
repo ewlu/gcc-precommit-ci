@@ -22,6 +22,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-20.04
+    environment: production
     permissions:
       issues: write
     defaults:
