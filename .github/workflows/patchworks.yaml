@@ -136,3 +136,4 @@ jobs:
       patch_name: ${{ matrix.patch_name }}
       baseline_hash: ${{ needs.init-submodules.outputs.baseline_hash }}
       tot_hash: ${{ needs.init-submodules.outputs.tot_hash }}
+    secrets: inherit
