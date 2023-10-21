@@ -186,6 +186,7 @@ jobs:
   apply:
     needs: [download_patches, create-issue]
     runs-on: ubuntu-20.04
+    environment: production
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
