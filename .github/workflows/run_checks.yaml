@@ -113,7 +113,7 @@ jobs:
           printf "## Patch information\n" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
           printf "## Notes\n" >> issue.md
-          echo "Build and Testsuite checks are in beta testing stages. Results are unstable and may be inaccurate." >> issue.md
+          echo "Testsuite checks are in beta testing stages. Results are unstable and may be inaccurate." >> issue.md
           cat issue.md
 
       - name: Create initial issue
@@ -368,3 +368,4 @@ jobs:
       tot_hash: ${{ inputs.tot_hash }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
+    secrets: inherit

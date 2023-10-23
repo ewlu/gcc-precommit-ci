@@ -51,7 +51,7 @@ jobs:
 
       - name: Create build pending comment
         run: |
-          echo "## Build GCC Status (Beta - Ignore Results)" > build_pending_comment.md
+          echo "## Build GCC Status" > build_pending_comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> build_pending_comment.md
 
       - name: Create build report comment
