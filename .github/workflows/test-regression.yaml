@@ -106,7 +106,7 @@ jobs:
 
       - name: Build pending comment
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
@@ -167,7 +167,7 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Zip build log
@@ -187,7 +187,7 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment
@@ -383,7 +383,7 @@ jobs:
 
       - name: Build test pending report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
@@ -464,7 +464,7 @@ jobs:
 
       - name: Build test complete report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
@@ -621,7 +621,7 @@ jobs:
 
       - name: Build test complete report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
@@ -728,7 +728,7 @@ jobs:
 
       - name: Update build pending issue
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state pending -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
@@ -789,7 +789,7 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state success -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Zip build log
@@ -809,7 +809,7 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment
@@ -865,7 +865,7 @@ jobs:
       - name: Build test starting report
         if: ${{ inputs.build_only != 'true' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
@@ -948,7 +948,7 @@ jobs:
       - name: Build test complete report
         if: ${{ inputs.build_only != 'true' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment

@@ -173,7 +173,7 @@ jobs:
 
       - name: Search for build failures
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -comment ${{ inputs.build_comment_id }} -repo ewlu/gcc-precommit-ci -failure
+          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -comment ${{ inputs.build_comment_id }} -repo ewlu/gcc-precommit-ci -failure -baseline ${{ inputs.baseline_hash }}
           ls current_logs
         continue-on-error: true
 
