@@ -106,7 +106,11 @@ jobs:
 
       - name: Build pending comment
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
@@ -167,7 +171,11 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Zip build log
@@ -187,7 +195,11 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment
@@ -728,7 +740,11 @@ jobs:
 
       - name: Update build pending issue
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
@@ -789,7 +805,11 @@ jobs:
 
       - name: Build success report
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Zip build log
@@ -809,7 +829,11 @@ jobs:
       - name: Build failure report
         if: ${{ always() && steps.build-gcc.outcome == 'failure' }}
         run: |
-          python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          if [ ${{ inputs.build_only }} == 'true' ]; then
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
+          else
+            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_report }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment
