@@ -129,6 +129,7 @@ jobs:
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
       additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
 
   creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [initialize-comments]
@@ -154,6 +155,7 @@ jobs:
       run_on_self_hosted: true
       tot_hash: ${{ inputs.tot_hash }}
       additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
 
   cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
@@ -178,6 +180,7 @@ jobs:
       run_on_self_hosted: false
       tot_hash: ${{ inputs.tot_hash }}
       additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
@@ -195,3 +198,4 @@ jobs:
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
       additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
