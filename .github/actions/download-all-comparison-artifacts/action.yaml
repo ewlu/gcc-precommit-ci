@@ -14,7 +14,7 @@ runs:
     # Download linux
 
     - name: Download linux rv32 bitmanip non-multilib
-      uses: ./.github/actions/download-comparison-artifacts
+      uses: ./.github/actions/common/download-comparison-artifacts
       with:
         report-artifact-name: gcc-linux-rv32gc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log
         binary-artifact-name: gcc-linux-rv32gc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.gcchash }}-non-multilib
@@ -22,7 +22,7 @@ runs:
         repo: ${{ inputs.repo }}
 
     - name: Download linux rv64 bitmanip non-multilib
-      uses: ./.github/actions/download-comparison-artifacts
+      uses: ./.github/actions/common/download-comparison-artifacts
       with:
         report-artifact-name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.gcchash }}-non-multilib-report.log
         binary-artifact-name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.gcchash }}-non-multilib
@@ -32,7 +32,7 @@ runs:
     # Multilib
 
     - name: Download newlib rv64 multilib
-      uses: ./.github/actions/download-comparison-artifacts
+      uses: ./.github/actions/common/download-comparison-artifacts
       with:
         report-artifact-name: gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib-report.log
         binary-artifact-name: gcc-newlib-rv64gc-lp64d-${{ inputs.gcchash }}-multilib
@@ -40,7 +40,7 @@ runs:
         repo: ${{ inputs.repo }}
 
     - name: Download linux rv64 vector multilib
-      uses: ./.github/actions/download-comparison-artifacts
+      uses: ./.github/actions/common/download-comparison-artifacts
       with:
         report-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log
         binary-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib
