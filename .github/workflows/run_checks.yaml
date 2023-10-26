@@ -233,7 +233,7 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix -q --3way &> out_base || true
+          git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_base || true
           cat out_base
           if [[ $(cat out_base | wc -l) != 0 ]]; then
             git am --show-current-patch=diff
@@ -253,7 +253,7 @@ jobs:
         run: |
           cd gcc
           git reset --hard ${{ inputs.tot_hash }}
-          git am ../patches/*.patch --whitespace=fix -q --3way &> out_tot || true
+          git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_tot || true
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
             git am --show-current-patch=diff
@@ -346,7 +346,7 @@ jobs:
           if [ "${{ steps.apply-baseline.outputs.apply_baseline }}" == "true" ]; then
             git checkout ${{ inputs.baseline_hash }}
           fi
-          git am ../patches/*.patch --whitespace=fix --3way
+          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           export PATCH_APPLIED_GCCHASH=$(git rev-parse HEAD)
           echo $PATCH_APPLIED_GCCHASH
           echo "patch_applied_gcchash=$PATCH_APPLIED_GCCHASH" >> $GITHUB_OUTPUT

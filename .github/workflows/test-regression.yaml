@@ -98,7 +98,7 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way
+          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           echo $(git rev-parse HEAD)
 
       - name: Install dependencies
@@ -329,7 +329,7 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way
+          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           echo $(git rev-parse HEAD)
 
       - name: Install dependencies
@@ -567,7 +567,7 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way
+          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           echo $(git rev-parse HEAD)
 
       - name: Install dependencies
@@ -729,7 +729,7 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way
+          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           echo $(git rev-parse HEAD)
 
       - name: Install dependencies
