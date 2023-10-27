@@ -75,7 +75,7 @@ jobs:
         run: |
           git checkout master
           git pull
-          if [ '${{ inputs.tot_hash }}' != '']; then git checkout ${{ inputs.tot_hash }}; fi
+          if [ '${{ inputs.tot_hash }}' != '' ]; then git checkout ${{ inputs.tot_hash }}; fi
           export TOT_HASH=$(git rev-parse HEAD)
           echo $TOT_HASH
           echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
