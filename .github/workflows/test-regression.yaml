@@ -219,6 +219,18 @@ jobs:
           body-path: riscv-gnu-toolchain/comment.md
           edit-mode: replace
 
+      - name: Add build-failure label
+        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ inputs.issue_num }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['build-failure']
+            })
+
       - name: Report error on build-failure
         if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
         run: |
@@ -815,6 +827,18 @@ jobs:
           comment-id: ${{ inputs.build_comment_id }}
           body-path: riscv-gnu-toolchain/comment.md
           edit-mode: replace
+
+      - name: Add build-failure label
+        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ inputs.issue_num }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['build-failure']
+            })
 
       - name: Report error on build-failure
         if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
