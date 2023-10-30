@@ -134,7 +134,7 @@ jobs:
         with:
           multilib_target_string: 'rv64gc-lp64d--;rv32gc-ilp32d--'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
-          upload_stage2_artifact: 'true'
+          upload_stage2_artifacts: 'true'
           mode: ${{ inputs.mode }}
           target: ${{ inputs.target }}
           gcchash: ${{ inputs.patch_applied_gcchash }}
@@ -533,7 +533,7 @@ jobs:
         with:
           multilib_target_string: 'rv64gcv-lp64d--;rv32gcv-ilp32d--'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
-          upload_stage2_artifact: 'false'
+          upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
           target: ${{ inputs.target }}
           gcchash: ${{ inputs.patch_applied_gcchash }}
