@@ -132,55 +132,20 @@ jobs:
             riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
           retention-days: 90
 
-      - name: Build success report
-        run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
-          else
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
-          fi
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
-      - name: Build failure report
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
-          else
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
-          fi
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
-      - name: Update build complete report comment
-        if: ${{ always() }}
-        uses: ./.github/actions/update-comment
+      - name: Report build completion status
+        uses: ./.github/actions/report-build-complete-status
         with:
-          comment_id: ${{ inputs.build_comment_id }}
-          file_path: riscv-gnu-toolchain/comment.md
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Add build-failure label
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: ${{ inputs.issue_num }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['build-failure']
-            })
-
-      - name: Report error on build-failure
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
-        continue-on-error: true
-
-      - name: Report build success
-        run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
-        continue-on-error: true
+          build_status: ${{ steps.build-status.outputs.build_status }}
+          patch_name: ${{ inputs.patch_name }}
+          target: ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          tot_hash: ${{ inputs.tot_hash }}
+          build_only: ${{ inputs.build_only }}
+          issue_num: ${{ inputs.issue_num }}
+          build_comment_id: ${{ inputs.build_comment_id }}
+          additional_info: ${{ inputs.additional_info }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          patchwork_token: ${{ secrets.PATCHWORK_API }}
 
     outputs:
       build_status: ${{ steps.build-status.outputs.build_status }}
@@ -474,57 +439,22 @@ jobs:
           name: ${{ steps.build-log.outputs.build_log_name }}
           path: |
             riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
-          retention-days: 9
+          retention-days: 90
 
-      - name: Build success report
-        run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
-          else
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
-          fi
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
-      - name: Build failure report
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
-          else
-            python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
-          fi
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
-      - name: Update build complete report comment
-        if: ${{ always() }}
-        uses: ./.github/actions/update-comment
+      - name: Report build completion status
+        uses: ./.github/actions/report-build-complete-status
         with:
-          comment_id: ${{ inputs.build_comment_id }}
-          file_path: riscv-gnu-toolchain/comment.md
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Add build-failure label
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: ${{ inputs.issue_num }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['build-failure']
-            })
-
-      - name: Report error on build-failure
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build failed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'fail' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
-        continue-on-error: true
-
-      - name: Report build success
-        run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'success' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
-        continue-on-error: true
+          build_status: ${{ steps.build-status.outputs.build_status }}
+          patch_name: ${{ inputs.patch_name }}
+          target: ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          tot_hash: ${{ inputs.tot_hash }}
+          build_only: ${{ inputs.build_only }}
+          issue_num: ${{ inputs.issue_num }}
+          build_comment_id: ${{ inputs.build_comment_id }}
+          additional_info: ${{ inputs.additional_info }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          patchwork_token: ${{ secrets.PATCHWORK_API }}
 
       - name: Build test starting report
         if: ${{ inputs.build_only != 'true' }}
