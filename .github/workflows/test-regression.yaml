@@ -71,35 +71,13 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
-      - name: Download patches artifact
-        uses: actions/download-artifact@v3
+      - name: Extract and apply patches
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
-          name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
-
-      - name: Checkout gcc hash
-        run: |
-          cd gcc
-          git fetch
-          git checkout ${{ inputs.baseline_hash }}
-
-      - name: Checkout trunk gcc hash
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          cd gcc
-          git checkout ${{ inputs.tot_hash }}
-
-      - name: Apply patches
-        run: |
-          cd gcc
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
-          echo $(git rev-parse HEAD)
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
 
       - name: Build pending comment
         run: |
@@ -134,7 +112,7 @@ jobs:
         with:
           multilib_target_string: 'rv64gc-lp64d--;rv32gc-ilp32d--'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
-          upload_stage2_artifact: 'true'
+          upload_stage2_artifacts: 'true'
           mode: ${{ inputs.mode }}
           target: ${{ inputs.target }}
           gcchash: ${{ inputs.patch_applied_gcchash }}
@@ -236,29 +214,13 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
-      - name: Download patches artifact
-        uses: actions/download-artifact@v3
+      - name: Extract and apply patches
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
-          name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
-
-      - name: Checkout gcc hash
-        run: |
-          cd gcc
-          git fetch
-          git checkout ${{ inputs.baseline_hash }}
-
-      - name: Apply patches to baseline
-        run: |
-          cd gcc
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
-          echo $(git rev-parse HEAD)
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
 
       - name: Build test pending report
         run: |
@@ -361,30 +323,14 @@ jobs:
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
-
-      - name: Download patches artifact
-        uses: actions/download-artifact@v3
+          
+      - name: Extract and apply patches
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
-          name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
-
-      - name: Checkout gcc hash
-        run: |
-          cd gcc
-          git fetch
-          git checkout ${{ inputs.baseline_hash }}
-
-      - name: Apply patches to baseline
-        run: |
-          cd gcc
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
-          echo $(git rev-parse HEAD)
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
 
       - name: Install dependencies
         run: |
@@ -467,36 +413,13 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
-      - name: Download patches artifact
-        uses: actions/download-artifact@v3
+      - name: Extract and apply patches
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
-          name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
-
-      - name: Checkout gcc hash
-        run: |
-          cd gcc
-          git fetch
-          git checkout ${{ inputs.baseline_hash }}
-
-      - name: Checkout gcc hash
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          cd gcc
-          git reset --hard origin/master
-          git pull origin master
-
-      - name: Apply patches to baseline
-        run: |
-          cd gcc
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix --3way --empty=drop
-          echo $(git rev-parse HEAD)
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
 
       - name: Update build pending issue
         run: |
@@ -533,7 +456,7 @@ jobs:
         with:
           multilib_target_string: 'rv64gcv-lp64d--;rv32gcv-ilp32d--'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
-          upload_stage2_artifact: 'false'
+          upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
           target: ${{ inputs.target }}
           gcchash: ${{ inputs.patch_applied_gcchash }}
