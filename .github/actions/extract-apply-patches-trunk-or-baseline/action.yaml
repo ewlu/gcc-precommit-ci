@@ -1,0 +1,57 @@
+name: "Extract apply patches to trunk or baseline"
+description: "Extract and apply patches to tip of tree or base line depending on build_only value"
+inputs:
+  patch_name:
+    description: 'Name of patch'
+    required: true
+  baseline_hash:
+    description: 'Baseline hash'
+    required: true
+  build_only:
+    description: 'Is build only'
+    required: true
+  tot_hash:
+    description: 'Tip of tree hash'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Checkout gcc hash
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.baseline_hash }}
+
+      - name: Checkout trunk gcc hash
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        if: ${{ inputs.build_only == 'true' }}
+        run: |
+          cd gcc
+          git checkout ${{ inputs.tot_hash }}
+          
+      - name: Apply patches
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        run: |
+          cd gcc
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git am ../patches/*.patch --whitespace=fix --3way
+          echo $(git rev-parse HEAD)
+
