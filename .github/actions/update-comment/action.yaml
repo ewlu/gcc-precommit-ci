@@ -1,0 +1,42 @@
+name: "Update comment"
+description: "Updates target comment with retries"
+inputs:
+  comment_id:
+    description: 'Id of comment to update'
+    required: true
+  file_path:
+    description: 'Path to comment'
+    required: true
+  token:
+    description: 'Github token'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Update comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: update-status
+        env:
+          GITHUB_TOKEN: ${{ inputs.token }}
+        with:
+          comment-id: ${{ inputs.comment_id }}
+          body-path: ${{ inputs.file_path }}
+          edit-mode: replace
+        continue-on-error: true
+
+      - name: backoff
+        shell: bash
+        if: ${{ steps.update-status.outcome == 'failure' }}
+        run: |
+          sleep 10
+
+      - name: Retry update comment
+        if: ${{ steps.update-status.outcome == 'failure' }}
+        uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ inputs.token }}
+        with:
+          comment-id: ${{ inputs.comment_id }}
+          body-path: ${{ inputs.file_path }}
+          edit-mode: replace
