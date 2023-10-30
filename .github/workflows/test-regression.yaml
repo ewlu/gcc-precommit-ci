@@ -111,30 +111,11 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
-        uses: peter-evans/create-or-update-comment@v3
-        id: build-pending
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ steps.build-pending.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry build pending report comment
-        if: ${{ steps.build-pending.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.build_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report build
         run: |
@@ -194,30 +175,11 @@ jobs:
 
       - name: Update build complete report comment
         if: ${{ always() }}
-        uses: peter-evans/create-or-update-comment@v3
-        id: build-complete
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry build pending report comment
-        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.build_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add build-failure label
         if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
@@ -304,30 +266,11 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
-        uses: peter-evans/create-or-update-comment@v3
-        id: test-pending
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ steps.test-pending.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry test pending report comment
-        if: ${{ steps.test-pending.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.test_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report testing
         run: |
@@ -373,30 +316,11 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
-        uses: peter-evans/create-or-update-comment@v3
-        id: test-complete
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ steps.test-complete.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry test complete report comment
-        if: ${{ steps.test-complete.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.test_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # The self-hosted environment does not have the same path setup as the hosted runners
   # We need to rebuild since restoring the artifact won't work
@@ -498,30 +422,11 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
-        uses: peter-evans/create-or-update-comment@v3
-        id: test-complete
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ steps.test-complete.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry test complete report comment
-        if: ${{ steps.test-complete.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.test_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # The self-hosted environment does not have the same path setup as the hosted runners
   # We need to rebuild since restoring the artifact won't work
@@ -603,30 +508,11 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
-        uses: peter-evans/create-or-update-comment@v3
-        id: build-pending
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ steps.build-pending.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry build pending report comment
-        if: ${{ steps.build-pending.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.build_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report build
         run: |
@@ -688,30 +574,11 @@ jobs:
 
       - name: Update build complete report comment
         if: ${{ always() }}
-        uses: peter-evans/create-or-update-comment@v3
-        id: build-complete
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry build complete report comment
-        if: ${{ always() && steps.build-complete.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.build_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.build_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add build-failure label
         if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
@@ -744,30 +611,11 @@ jobs:
 
       - name: Update test pending report comment
         if: ${{ inputs.build_only != 'true' }}
-        uses: peter-evans/create-or-update-comment@v3
-        id: test-pending
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ inputs.build_only != 'true' && steps.test-pending.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry test pending report comment
-        if: ${{ inputs.build_only != 'true' && steps.test-pending.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.test_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report testing
         if: ${{ inputs.build_only != 'true' }}
@@ -789,31 +637,12 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
+            
       - name: Update test complete report comment
         if: ${{ inputs.build_only != 'true' }}
-        uses: peter-evans/create-or-update-comment@v3
-        id: test-complete
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/update-comment
         with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
-        continue-on-error: true
-
-      - name: backoff
-        if: ${{ inputs.build_only != 'true' && steps.test-complete.outcome == 'failure' }}
-        run: |
-          sleep 10
-
-      - name: Retry test complete report comment
-        if: ${{ inputs.build_only != 'true' && steps.test-complete.outcome == 'failure' }}
-        uses: peter-evans/create-or-update-comment@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          comment-id: ${{ inputs.test_comment_id }}
-          body-path: riscv-gnu-toolchain/comment.md
-          edit-mode: replace
+          comment_id: ${{ inputs.test_comment_id }}
+          file_path: riscv-gnu-toolchain/comment.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
