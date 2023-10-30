@@ -129,7 +129,7 @@ jobs:
       fail-fast: false
       matrix:
         patch_name: ${{ fromJSON(needs.fetch_patches.outputs.list_of_patch_names) }}
-    uses: ./.github/workflows/run_checks.yaml
+    uses: ./.github/workflows/run-checks.yaml
     permissions:
       issues: write
     with:
