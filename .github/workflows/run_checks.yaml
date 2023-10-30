@@ -112,6 +112,16 @@ jobs:
           printf "Logs can be found in the associated Github Actions run: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
           printf "## Patch information\n" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          printf "## Build Targets" >> issue.md
+          echo "Some targets are built as multilibs. If a build target ends with `multilib`, please refer to the table below to see all the targets within that multilib." >> issue.md
+          printf "|Target name|`-march` string|" >> issue.md
+          printf "|-|-|" >> issue.md
+          printf "|newlib-rv64gc-lp64d-multilib|`rv32gc-ilp32d`, `rv64gc-lp64d`|" >> issue.md
+          printf "|linux-rv64gcv-lp64d-multilib|`rv32gcv-ilp32d`, `rv64gcv-lp64d`|" >> issue.md
+          printf "## Target Information" >> issue.md
+          printf "|Target Shorthand|`-march` string|" >> issue.md
+          printf "|-|-|" >> issue.md
+          printf "|Bitmanip|`gc_zba_zbb_zbc_zbs`|" >> issue.md
           printf "## Notes\n" >> issue.md
           echo "Testsuite checks are in beta testing stages. Results are unstable and may be inaccurate." >> issue.md
           cat issue.md
