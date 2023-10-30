@@ -63,7 +63,7 @@ jobs:
 
       - name: Check workflow dispatch
         id: dispatch
-        if: ${{ inputs.tot_hash == '' }} # tot_hash always set at apply tip of tree step in run_checks.yaml
+        if: ${{ inputs.tot_hash == '' }} # tot_hash always set at apply tip of tree step in run-checks.yaml
         run: |
           echo "workflow_dispatch=true" >> $GITHUB_OUTPUT
 
