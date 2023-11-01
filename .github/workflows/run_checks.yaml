@@ -248,10 +248,8 @@ jobs:
           if [[ $(cat out_base | wc -l) != 0 ]]; then
             git am --reject
             echo "Failed to apply patch cleanly to baseline hash"
-            echo "\`\`\`" >> out_base
             rm out_base
             git am --reject &> out_base
-            echo "\`\`\`" >> out_base
             git am --abort
             echo "apply_baseline=false" >> $GITHUB_OUTPUT
           else
