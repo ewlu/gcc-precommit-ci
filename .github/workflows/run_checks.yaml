@@ -246,10 +246,10 @@ jobs:
           git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_base || true
           cat out_base
           if [[ $(cat out_base | wc -l) != 0 ]]; then
-            git am --reject
+            git am --reject || true
             echo "Failed to apply patch cleanly to baseline hash"
             rm out_base
-            git am --reject &> out_base
+            git am --reject &> out_base || true
             git am --abort
             echo "apply_baseline=false" >> $GITHUB_OUTPUT
           else
@@ -265,10 +265,10 @@ jobs:
           git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_tot || true
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
-            git am --reject
+            git am --reject || true
             echo "Failed to apply patch cleanly to tip of tree"
             rm out_tot
-            git am --reject &> out_tot
+            git am --reject &> out_tot || true
             git am --abort
             echo "apply_tot=false" >> $GITHUB_OUTPUT
           else
