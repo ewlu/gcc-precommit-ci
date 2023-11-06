@@ -1,9 +1,6 @@
 name: "Restore Stage 2"
 description: "Restore stage 2 artifacts"
 inputs:
-  multilib_target_string:
-    description: 'Multilib build string'
-    required: true
   mode:
     description: 'libc'
     required: true

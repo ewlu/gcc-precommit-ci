@@ -133,6 +133,7 @@ jobs:
           retention-days: 90
 
       - name: Report build completion status
+        if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
@@ -442,6 +443,7 @@ jobs:
           retention-days: 90
 
       - name: Report build completion status
+        if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
