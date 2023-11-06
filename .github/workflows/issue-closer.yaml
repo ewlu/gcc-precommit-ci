@@ -1,0 +1,41 @@
+name: Issue-Closer
+
+on:
+  schedule:
+    # Run nightly at 2:17
+    # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
+    - cron: 17 2 * * *
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Clone riscv-gnu-toolchain
+        working-directory: ./
+        run: |
+          git submodule update --init riscv-gnu-toolchain
+
+      - name: Install dependencies
+        run: |
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+          sudo apt install zip -y
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+
+      - name: Close issues
+        run: |
+          python scripts/close_old_issues.py -token ${{ secrets.GITHUB_TOKEN }}
+
