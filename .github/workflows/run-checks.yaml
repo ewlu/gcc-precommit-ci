@@ -112,6 +112,8 @@ jobs:
           printf "Logs can be found in the associated Github Actions run: https://github.com/ewlu/gcc-precommit-ci/actions/runs/${{ github.run_id }}\n" >> issue.md
           printf "## Patch information\n" >> issue.md
           head -n 3 patches/${{ inputs.patch_name }} >> issue.md
+          # Issue closer depends on patch id
+          printf "Patch id: %d\n" $(tail -n 1 patches/${{ inputs.patch_name }}) >> issue.md
           printf "## Build Targets\n" >> issue.md
           printf "Some targets are built as multilibs. If a build target ends with \`multilib\`, please refer to the table below to see all the targets within that multilib.\n" >> issue.md
           printf "|Target name|\`-march\` string|\n" >> issue.md
