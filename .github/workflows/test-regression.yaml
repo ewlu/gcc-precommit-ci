@@ -138,6 +138,7 @@ jobs:
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
           patch_name: ${{ inputs.patch_name }}
+          build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           target: ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
@@ -448,6 +449,7 @@ jobs:
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
           patch_name: ${{ inputs.patch_name }}
+          build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           target: ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}

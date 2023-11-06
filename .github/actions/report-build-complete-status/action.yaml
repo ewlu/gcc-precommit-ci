@@ -7,6 +7,9 @@ inputs:
   patch_name:
     description: 'Name of patch'
     required: true
+  build_log_name:
+    description: 'Name of build log'
+    required: true
   target:
     description: 'libc-arch-abi-multilib'
     required: true
@@ -39,6 +42,7 @@ runs:
   using: "composite"
   steps:
       - name: Build success report
+        if: ${{ inputs.build_status == 'success' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
@@ -47,16 +51,15 @@ runs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Build failure report
-        if: ${{ always() && inputs.build_status == 'failure' }}
+        if: ${{ inputs.build_status == 'failure' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
           if [ '${{ inputs.build_only }}' == 'true' ]; then export HASH=${{ inputs.tot_hash }}; else export HASH=${{ inputs.baseline_hash }}; fi
-          python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Build failure. Please check the ${{ steps.build-log.outputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
+          python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Build failure. Please check the ${{ inputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment
-        if: ${{ always() }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.build_comment_id }}
@@ -64,7 +67,7 @@ runs:
           token: ${{ inputs.github_token }}
 
       - name: Add build-failure label
-        if: ${{ always() && inputs.build_status == 'failure' }}
+        if: ${{ inputs.build_status == 'failure' }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -76,7 +79,7 @@ runs:
             })
 
       - name: Report error on build-failure
-        if: ${{ always() && inputs.build_status == 'failure' }}
+        if: ${{ inputs.build_status == 'failure' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
@@ -84,6 +87,7 @@ runs:
         continue-on-error: true
 
       - name: Report build success
+        if: ${{ inputs.build_status == 'success' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
