@@ -118,20 +118,6 @@ jobs:
           gcchash: ${{ inputs.patch_applied_gcchash }}
           multilib: ${{ inputs.multilib }}
 
-      - name: Zip build log
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          zip ${{ steps.build-log.outputs.build_log_name }}.zip build/${{ steps.build-log.outputs.build_log_name }}.txt
-
-      - name: Upload build log
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.build-log.outputs.build_log_name }}
-          path: |
-            riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
-          retention-days: 90
-
       - name: Report build completion status
         if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
@@ -290,7 +276,7 @@ jobs:
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
-          
+
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
@@ -429,20 +415,6 @@ jobs:
           gcchash: ${{ inputs.patch_applied_gcchash }}
           multilib: ${{ inputs.multilib }}
 
-      - name: Zip build log
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        run: |
-          zip ${{ steps.build-log.outputs.build_log_name }}.zip build/${{ steps.build-log.outputs.build_log_name }}.txt
-
-      - name: Upload build log
-        if: ${{ always() && steps.build-status.outputs.build_status == 'failure' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.build-log.outputs.build_log_name }}
-          path: |
-            riscv-gnu-toolchain/${{ steps.build-log.outputs.build_log_name }}.zip
-          retention-days: 90
-
       - name: Report build completion status
         if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
@@ -494,7 +466,7 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-            
+
       - name: Update test complete report comment
         if: ${{ inputs.build_only != 'true' }}
         uses: ./.github/actions/update-comment
