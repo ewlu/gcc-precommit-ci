@@ -119,6 +119,7 @@ jobs:
           printf "|Target name|\`-march\` string|\n" >> issue.md
           printf "|-|-|\n" >> issue.md
           printf "|newlib-rv64gc-lp64d-multilib|\`rv32gc-ilp32d\`, \`rv64gc-lp64d\`|\n" >> issue.md
+          printf "|newlib-rv64gcv-lp64d-multilib|\`rv64gcv-lp64d\`|\n" >> issue.md
           printf "|linux-rv64gcv-lp64d-multilib|\`rv32gcv-ilp32d\`, \`rv64gcv-lp64d\`|\n" >> issue.md
           printf "## Target Information\n" >> issue.md
           printf "|Target Shorthand|\`-march\` string|\n" >> issue.md

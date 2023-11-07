@@ -403,8 +403,9 @@ jobs:
 
       # Don't upload stage 2 artifacts on self-hosted runners
       # in interest of resources
-      - name: Build gcc
-        id: build-status
+      - name: Build gcc linux
+        if: ${{ inputs.mode == 'linux' }}
+        id: build-status-linux
         uses: ./.github/actions/common/build-target
         with:
           multilib_target_string: 'rv64gcv-lp64d--;rv32gcv-ilp32d--'
@@ -414,6 +415,30 @@ jobs:
           target: ${{ inputs.target }}
           gcchash: ${{ inputs.patch_applied_gcchash }}
           multilib: ${{ inputs.multilib }}
+
+      - name: Build gcc newlib
+        if: ${{ inputs.mode == 'newlib' }}
+        id: build-status-newlib
+        uses: ./.github/actions/common/build-target
+        with:
+          multilib_target_string: 'rv64gcv-lp64d--'
+          build_log_name: ${{ steps.build-log.outputs.build_log_name }}
+          upload_stage2_artifacts: 'false'
+          mode: ${{ inputs.mode }}
+          target: ${{ inputs.target }}
+          gcchash: ${{ inputs.patch_applied_gcchash }}
+          multilib: ${{ inputs.multilib }}
+
+      - name: Get build status
+        if: ${{ always() }}
+        id: build-status
+        run: |
+          if [ "${{ inputs.mode }}" == "newlib" ]; then 
+            export BUILD_STATUS=${{steps.build-status-newlib.outputs.build_status }}
+          else
+            export BUILD_STATUS=${{steps.build-status-linux.outputs.build_status }}
+          fi
+          echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
 
       - name: Report build completion status
         if: ${{ always() }}

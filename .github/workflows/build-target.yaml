@@ -136,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [linux]
+        mode: [newlib, linux]
         target:
           [ rv64gcv-lp64d ] # Dummy placeholder. runs rv32/64gcv
         multilib: [multilib]

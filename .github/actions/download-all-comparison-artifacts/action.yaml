@@ -47,4 +47,12 @@ runs:
         github-token: ${{ inputs.token }}
         repo: ${{ inputs.repo }}
 
+    - name: Download newlib rv64 vector multilib
+      uses: ./.github/actions/common/download-comparison-artifacts
+      with:
+        report-artifact-name: gcc-newlib-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log
+        binary-artifact-name: gcc-newlib-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib
+        github-token: ${{ inputs.token }}
+        repo: ${{ inputs.repo }}
+
     # End download
