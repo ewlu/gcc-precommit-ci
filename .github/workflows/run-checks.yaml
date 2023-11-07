@@ -124,7 +124,7 @@ jobs:
           printf "## Target Information\n" >> issue.md
           printf "|Target Shorthand|\`-march\` string|\n" >> issue.md
           printf "|-|-|\n" >> issue.md
-          printf "|Bitmanip|\`gc_zba_zbb_zbc_zbs\`|\n" >> issue.md
+          printf "|Bitmanip|\`gc_zba_zbb_zbc_zbs_zfa_zicond\`|\n" >> issue.md
           printf "## Notes\n" >> issue.md
           echo "Testsuite checks are in beta testing stages. Results are unstable and may be inaccurate." >> issue.md
           cat issue.md
