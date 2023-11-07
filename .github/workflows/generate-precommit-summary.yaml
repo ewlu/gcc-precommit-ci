@@ -337,6 +337,18 @@ jobs:
               labels: ['new-regressions']
             })
 
+      - name: Add Resolved regressions Label to Issue
+        if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'resolved-regressions') }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ inputs.issue_num }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['resolved-regressions']
+            })
+
       - name: Report Failure
         if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'build-failure') || contains(steps.issue-labels.outputs.issue_labels, 'testsuite-failure') || contains(steps.issue-labels.outputs.issue_labels, 'new-regressions') }}
         id: report-failure
