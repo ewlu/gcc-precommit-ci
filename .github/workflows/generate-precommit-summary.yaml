@@ -376,12 +376,12 @@ jobs:
         if: ${{ contains(steps.issue-labels.outputs.issue_labels, 'build-failure') || contains(steps.issue-labels.outputs.issue_labels, 'testsuite-failure') || contains(steps.issue-labels.outputs.issue_labels, 'new-regressions') }}
         id: report-failure
         run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing failed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'fail' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }}) -desc 'Testing failed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'fail' -context 'test' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
 
       - name: Report Success
         if: ${{ steps.report-failure.outcome == 'skipped' }}
         id: report-success
         run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }} -desc 'Testing passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'success' -context 'test' -token 'PLACEHOLDER'
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 ./patches/${{ inputs.patch_name }}) -desc 'Testing passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'success' -context 'test' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
