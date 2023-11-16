@@ -1,0 +1,5 @@
+#
+# TODO: Root cause and file bugzilla
+# Postcommit: https://github.com/patrick-rivos/gcc-postcommit-ci/issues/160
+#
+FAIL: gcc.target/riscv/rvv/autovec/binop/narrow_run-1.c (test for excess errors)
