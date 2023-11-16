@@ -1,0 +1,16 @@
+#
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111969
+#
+FAIL: gcc.dg/nextafter-2.c
+FAIL: gfortran.dg/default_format_2.f90
+FAIL: gfortran.dg/default_format_denormal_2.f90
+FAIL: gfortran.dg/ieee/dec_math_1.f90
+FAIL: gfortran.dg/ieee/large_1.f90
+FAIL: gfortran.dg/ieee/large_2.f90
+FAIL: gfortran.dg/intrinsic_pack_6.f90
+FAIL: gfortran.dg/large_real_kind_2.F90
+FAIL: gfortran.dg/round_4.f90
+FAIL: gfortran.dg/zero_sized_3.f90
+FAIL: gfortran.fortran-torture/execute/intrinsic_count.f90
+FAIL: gfortran.fortran-torture/execute/intrinsic_matmul.f90
+FAIL: gfortran.fortran-torture/execute/intrinsic_sum.f90
