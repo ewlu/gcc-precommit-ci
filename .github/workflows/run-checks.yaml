@@ -246,7 +246,9 @@ jobs:
           cd gcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-          git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_base || true
+          for patch in $(ls -v ../patches/*.patch); do
+            git am $patch --whitespace=fix -q --3way --empty=drop &> out_base || true
+          done
           cat out_base
           if [[ $(cat out_base | wc -l) != 0 ]]; then
             git am --show-current-patch=diff
@@ -266,7 +268,9 @@ jobs:
         run: |
           cd gcc
           git reset --hard ${{ inputs.tot_hash }}
-          git am ../patches/*.patch --whitespace=fix -q --3way --empty=drop &> out_tot || true
+          for patch in $(ls -v ../patches/*.patch); do
+            git am $patch --whitespace=fix -q --3way --empty=drop &> out_tot || true
+          done
           cat out_tot
           if [[ $(cat out_tot | wc -l) != 0 ]]; then
             git am --show-current-patch=diff
