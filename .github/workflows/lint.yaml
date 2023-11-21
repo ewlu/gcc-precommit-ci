@@ -73,7 +73,7 @@ jobs:
           let patches_and_metadata_count=$(ls -1 patches | wc -l)
           let patches_count=$((patches_and_metadata_count / 2))
           let patch_num=$(printf "%04d" $patches_count)
-          python ./gcc/contrib/check_GNU_style.py "./patches/$patch_num-patch.patch" 2>&1 | tee "lint_results.txt"
+          python ./gcc/contrib/check_GNU_style.py "./patches/$(printf '%04d' $patches_count)-patch.patch" 2>&1 | tee "lint_results.txt"
           if (($(cat lint_results.txt | wc -l) > 0)); then
             echo "lint_failed=true" >> $GITHUB_OUTPUT
           else
