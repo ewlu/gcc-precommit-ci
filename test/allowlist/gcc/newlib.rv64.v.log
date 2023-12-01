@@ -3,3 +3,10 @@
 # Postcommit: https://github.com/patrick-rivos/gcc-postcommit-ci/issues/160
 #
 FAIL: gcc.target/riscv/rvv/autovec/binop/narrow_run-1.c (test for excess errors)
+
+#
+# Flaky runtime timeout
+# "WARNING: program timed out."
+# https://github.com/ewlu/gcc-precommit-ci/issues/809
+#
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c execution test
