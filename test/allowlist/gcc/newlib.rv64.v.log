@@ -8,5 +8,7 @@ FAIL: gcc.target/riscv/rvv/autovec/binop/narrow_run-1.c (test for excess errors)
 # Flaky runtime timeout
 # "WARNING: program timed out."
 # https://github.com/ewlu/gcc-precommit-ci/issues/809
+# https://github.com/ewlu/gcc-precommit-ci/issues/833
 #
 FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c execution test
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c -flto -ffat-lto-objects execution test
