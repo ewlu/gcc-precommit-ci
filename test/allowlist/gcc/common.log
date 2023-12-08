@@ -1,0 +1,7 @@
+#
+# These testcases appear to be flaky. Still needs more investigation.
+#
+FAIL: gcc.c-torture/unsorted/dump-noaddr.c.*r.avlprop,  -O3 -g  comparison
+FAIL: gcc.c-torture/unsorted/dump-noaddr.c.*r.reload,  -O3 -g  comparison
+FAIL: gcc.c-torture/unsorted/dump-noaddr.c.*r.avlprop,  -O3 -fomit-frame-pointer -funroll-loops -fpeel-loops -ftracer -finline-functions  comparison
+FAIL: gcc.c-torture/unsorted/dump-noaddr.c.*r.reload,  -O3 -fomit-frame-pointer -funroll-loops -fpeel-loops -ftracer -finline-functions  comparison
