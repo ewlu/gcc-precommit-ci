@@ -1,0 +1,181 @@
+name: Downtime-Runner
+
+on:
+  schedule:
+    # Run nightly at 2:17
+    # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
+    - cron: 17 2 * * *
+
+jobs:
+  check_last_runner:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Clone riscv-gnu-toolchain
+        working-directory: ./
+        run: |
+          git submodule update --init riscv-gnu-toolchain
+
+      - name: Install dependencies
+        run: |
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+          sudo apt install zip -y
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+
+      - name: Download last successful run artifact
+        run: |
+          pip install pygithub requests
+          mkdir result
+          mkdir temp
+          python ./scripts/download_artifact.py -name "downtime_runner_success" -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir result || true
+          ls result
+
+      - name: Check if artifact was found
+        id: continue
+        run: |
+          if ( test -f result/downtime_runner_success ); then
+            unzip result/downtime_runner_success
+            ls
+            unzip end_date.zip
+            ls
+            START_DATE=$(cat end_date.txt)
+            echo "start_date=$START_DATE" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build success artifact 
+        if: ${{ steps.continue.outputs.start_date == '' }}
+        run: |
+          TZ=UTC date -d "$(date -d 'yesterday' '+%Y-%m-%d')" "+%Y-%m-%dT%H:%M:%S" > yesterday_date.txt
+          YESTERDAY=$(cat yesterday_date.txt)
+          # Get yestderay noon
+          TZ=UTC date -d "@$((($(TZ=UTC date -d $YESTERDAY +%s) + 43200)))" '+%Y-%m-%dT%H:%M:%S' > end_date.txt
+          zip end_date.zip end_date.txt
+
+      - name: Upload success artifact
+        if: ${{ steps.continue.outputs.start_date == '' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: downtime_runner_success
+          path: |
+            riscv-gnu-toolchain/end_date.zip
+          retention-days: 90
+
+    outputs:
+      start_date: ${{ steps.continue.outputs.start_date }}
+
+  fetch_patches:
+    # This is a dedicated self hosted runner that will always* run this on time
+    needs: [check_last_runner]
+    runs-on: ubuntu-20.04
+    if: ${{ needs.check_last_runner.outputs.start_date != '' }}
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Clone riscv-gnu-toolchain
+        working-directory: ./
+        run: |
+          git submodule update --init riscv-gnu-toolchain
+
+      - name: Install dependencies
+        run: |
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+          sudo apt install zip -y
+
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip -y
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+
+      - name: Get Timestamps
+        run: |
+          TZ=UTC date -d "$(date -d 'yesterday' '+%Y-%m-%d')" "+%Y-%m-%dT%H:%M:%S" > yesterday_date.txt
+          YESTERDAY=$(cat yesterday_date.txt)
+          # Get yesterday noon
+          TZ=UTC date -d "@$((($(TZ=UTC date -d $YESTERDAY +%s) + 43200)))" '+%Y-%m-%dT%H:%M:%S' > end_date.txt
+          echo ${{ needs.check_last_runner.outputs.start_date }} > start_date.txt
+
+          echo "timestamps"
+          echo "start time: $(cat start_date.txt)"
+          echo "end time: $(cat end_date.txt)"
+
+      - name: Perform patch checks
+        run: |
+          python scripts/check_patch_checks.py -start $(cat start_date.txt) -end $(cat end_date.txt)
+
+      - name: Get list of new patches
+        run: |
+          mkdir -p patch_urls
+          mkdir -p patchworks_metadata
+          python scripts/create_patch_files.py -file ./patch_numbers_to_run.txt
+
+      - name: List patch artifacts
+        id: list_patches
+        run: |
+          export PATCHLIST="$(cat artifact_names.txt)"
+          echo "patch_list=$PATCHLIST" >> $GITHUB_OUTPUT
+
+      - name: Make artifact zip
+        run: |
+          zip -r patch_files.zip patch_urls
+          zip -r patchworks_metadata_files.zip patchworks_metadata
+
+      - name: Upload patch urls zip
+        if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: patch_urls
+          path: |
+            riscv-gnu-toolchain/patch_files.zip
+          retention-days: 90
+
+      - name: Upload patchworks metadata zip
+        if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: patchworks_metadata_files
+          path: |
+            riscv-gnu-toolchain/patchworks_metadata_files.zip
+          retention-days: 90
+
+    outputs:
+      list_of_patch_names: ${{ steps.list_patches.outputs.patch_list }}
+
+  init-submodules:
+    needs: [check_last_runner, fetch_patches]
+    if: ${{ needs.fetch_patches.outputs.list_of_patch_names != '[]' }}
+    uses: ./.github/workflows/init-submodules.yaml
+    with:
+      baseline_hash: ${{ inputs.baseline_gcc_hash }}
+      tot_hash: ${{ inputs.tip_of_tree_hash }}
+
+  patch_matrix:
+    needs: [check_last_runner, fetch_patches, init-submodules]
+    strategy:
+      fail-fast: false
+      matrix:
+        patch_name: ${{ fromJSON(needs.fetch_patches.outputs.list_of_patch_names) }}
+    uses: ./.github/workflows/run-checks.yaml
+    permissions:
+      issues: write
+    with:
+      patch_name: ${{ matrix.patch_name }}
+      baseline_hash: ${{ needs.init-submodules.outputs.baseline_hash }}
+      tot_hash: ${{ needs.init-submodules.outputs.tot_hash }}
+    secrets: inherit
