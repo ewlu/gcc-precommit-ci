@@ -310,7 +310,7 @@ jobs:
       - name: Build
         run: |
           cd build
-          make ${{ inputs.mode }} -j $(nproc)
+          make ${{ inputs.mode }} -j20
 
       - name: Replace allowlist
         run: |
