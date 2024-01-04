@@ -15,3 +15,13 @@ FAIL: gfortran.dg/maxval_char_2.f90
 # TODO: Root cause & file bugzilla
 #
 FAIL: gcc.target/riscv/zbb-strlen.c
+
+#
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=113238
+#
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-vpv.c 
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-vtv.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s176.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s431.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s1281.c
