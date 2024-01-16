@@ -144,11 +144,9 @@ jobs:
             rm -rf sum_files
           done
 
-      - name: Separate multilib results
+      - name: Separate multilib results (previous_logs)
         run: |
           python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
-          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
-          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
           ls previous_logs
         continue-on-error: true
 
@@ -184,9 +182,10 @@ jobs:
           done
           ls current_logs
 
-      - name: Separate multilib logs
+      - name: Separate multilib logs (current_logs)
         run: |
           python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
+          ls current_logs
         continue-on-error: true
 
       - name: Compare artifacts
