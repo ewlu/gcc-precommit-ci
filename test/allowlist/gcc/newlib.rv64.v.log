@@ -9,6 +9,12 @@ FAIL: gcc.target/riscv/rvv/autovec/binop/narrow_run-1.c (test for excess errors)
 # "WARNING: program timed out."
 # https://github.com/ewlu/gcc-precommit-ci/issues/809
 # https://github.com/ewlu/gcc-precommit-ci/issues/833
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=113238
 #
-FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c execution test
-FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c -flto -ffat-lto-objects execution test
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-vpv.c 
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-vtv.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s176.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s351.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s431.c
+FAIL: gcc.dg/vect/tsvc/vect-tsvc-s1281.c
+
