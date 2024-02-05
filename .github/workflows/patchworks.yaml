@@ -55,10 +55,11 @@ jobs:
           sudo apt install zip -y
 
       - name: Get timestamps and make directories
+        if: ${{ inputs.timestamp == '' }}
         run: |
           TZ=UTC date -d "@$((($(date +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
           python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
-          PRIOR_RUN_TIME=$(cat date_cur.txt)
+          PRIOR_RUN_TIME=$(cat date_prior.txt)
           TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_rounded.txt
           TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_minus_15_min_rounded.txt
 
