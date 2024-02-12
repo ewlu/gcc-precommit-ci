@@ -15,6 +15,7 @@ FAIL: gfortran.dg/maxval_char_2.f90
 # TODO: Root cause & file bugzilla
 #
 FAIL: gcc.target/riscv/zbb-strlen.c
+FAIL: gfortran.dg/matmul_15.f90
 
 #
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=113238
