@@ -123,7 +123,7 @@ jobs:
         run: |
           mkdir -p patch_urls
           mkdir -p patchworks_metadata
-          python scripts/create_patch_files.py -file ./patch_numbers_to_run.txt
+          python scripts/create_patches_files.py -file ./patch_numbers_to_run.txt
 
       - name: List patch artifacts
         id: list_patches
