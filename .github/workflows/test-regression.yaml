@@ -110,7 +110,7 @@ jobs:
         id: build-status
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gc-lp64d--;rv32gc-ilp32d--'
+          multilib_target_string: ${{ inputs.target }}
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'true'
           mode: ${{ inputs.mode }}
@@ -202,11 +202,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          if [ "${{ inputs.multilib }}" == "multilib" ]; then
-            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+          if [ '${{ inputs.mode }}' == 'newlib']; then
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-newlib
           else
-            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
-            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
           fi
 
       - name: Restore Stage2 Artifacts
@@ -300,11 +300,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          if [ "${{ inputs.multilib }}" == "multilib" ]; then
-            ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--;rv32gc-ilp32d--"
+          TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
+          if [ '${{ inputs.mode }}' == 'newlib' ]; then
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-newlib
           else
-            TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
-            ../configure --prefix=$(pwd) --with-multilib-generator="${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}--"
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
           fi
 
       - name: Build
@@ -418,7 +418,7 @@ jobs:
         id: build-status-linux
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gcv-lp64d--;rv32gcv-ilp32d--'
+          multilib_target_string: 'rv64gv-lp64d'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
@@ -431,7 +431,7 @@ jobs:
         id: build-status-newlib
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gcv-lp64d--'
+          multilib_target_string: 'rv64gcv-lp64d-newlib'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
