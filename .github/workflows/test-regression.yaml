@@ -418,7 +418,7 @@ jobs:
         id: build-status-linux
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gv-lp64d'
+          multilib_target_string: 'rv64gcv-lp64d'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
