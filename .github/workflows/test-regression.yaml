@@ -204,7 +204,7 @@ jobs:
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
           if [ '${{ inputs.mode }}' == 'newlib']; then
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-newlib
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-reduced-multilib-set
           else
             ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
           fi
@@ -302,7 +302,7 @@ jobs:
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
           if [ '${{ inputs.mode }}' == 'newlib' ]; then
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-newlib
+            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-reduced-multilib-set
           else
             ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
           fi
@@ -431,7 +431,7 @@ jobs:
         id: build-status-newlib
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gcv-lp64d-newlib'
+          multilib_target_string: 'rv64gcv-lp64d-reduced-multilib-set'
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
