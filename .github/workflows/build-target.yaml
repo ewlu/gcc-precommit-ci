@@ -97,7 +97,91 @@ jobs:
       build_comment_id: ${{ steps.build-comment.outputs.comment-id }}
       test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
 
-  creg: # Check Regressions. Short name so I can see the matrix string in github
+  creg-baseline: # Check Regressions. Short name so I can see the matrix string in github
+    needs: [initialize-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [linux]
+        target:
+          [
+            # rv32gcv-ilp32d, # rv32 vector
+            # rv64gcv-lp64d, # rv64 vector
+            rv32gc_zba_zbb_zbc_zbs-ilp32d, # rv32 bitmanip
+            rv64gc_zba_zbb_zbc_zbs-lp64d, # rv64 bitmanip
+            # rv32gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-ilp32d, # rv32 vector crypto
+            # rv64gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-lp64d, # rv64 vector crypto
+            # rv64imafdcv_zicond_zawrs_zbc_zvkng_zvksg_zvbb_zvbc_zicsr_zba_zbb_zbs_zicbom_zicbop_zicboz_zfhmin_zkt-lp64d, # RVA23U64 profile with optional extensions, excluding unsupported extensions
+          ]
+        multilib: [non-multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ inputs.build_only }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
+      run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
+
+  creg-sh-baseline: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
+    needs: [initialize-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [newlib, linux]
+        target:
+          [ rv64gcv-lp64d ] # Dummy placeholder. runs rv32/64gcv
+        multilib: [multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ inputs.build_only }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
+      run_on_self_hosted: true
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
+    secrets: inherit
+
+  cmreg-baseline: # Check Multilib Regressions. Short name so I can see the matrix string in github
+    needs: [initialize-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [newlib]
+        target: [rv64gc-lp64d] # Dummy placeholder. Actually runs rv32/rv64 multilib
+        multilib: [multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ inputs.build_only }}
+      issue_num: ${{ inputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
+      run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ inputs.additional_info }}
+
+  creg-applied: # Check Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
     strategy:
       fail-fast: false
@@ -131,7 +215,7 @@ jobs:
       additional_info: ${{ inputs.additional_info }}
     secrets: inherit
 
-  creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
+  creg-sh-applied: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [initialize-comments]
     strategy:
       fail-fast: false
@@ -157,7 +241,7 @@ jobs:
       additional_info: ${{ inputs.additional_info }}
     secrets: inherit
 
-  cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
+  cmreg-applied: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
     strategy:
       fail-fast: false
@@ -184,7 +268,7 @@ jobs:
 
   summarize:
     if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
-    needs: [initialize-comments, creg, cmreg, creg-sh]
+    needs: [initialize-comments, creg-baseline, cmreg-baseline, creg-sh-baseline, creg-applied, cmreg-applied, creg-sh-applied]
     permissions:
       issues: write
     uses: ./.github/workflows/generate-precommit-summary.yaml

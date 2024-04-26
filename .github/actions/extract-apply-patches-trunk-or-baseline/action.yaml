@@ -13,6 +13,9 @@ inputs:
   tot_hash:
     description: 'Tip of tree hash'
     required: true
+  apply:
+    description: 'Apply the patch'
+    required: true
 
 runs:
   using: "composite"
@@ -47,6 +50,7 @@ runs:
           
       - name: Apply patches
         shell: bash
+        if: ${{ inputs.apply == 'true' }}
         working-directory: riscv-gnu-toolchain
         run: |
           cd gcc

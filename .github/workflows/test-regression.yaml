@@ -71,15 +71,30 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+        # if baseline != patch_applied then this is a apply run
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         with:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           build_only: ${{ inputs.build_only }}
           tot_hash: ${{ inputs.tot_hash }}
+          apply: true
+
+        # if baseline == patch_applied then this is a baseline run
+      - name: Checkout gcc hash
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash == inputs.patch_applied_gcchash }}
+        with:
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
+          apply: false
 
       - name: Build pending comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           if [ '${{ inputs.build_only }}' == 'true' ]; then
             python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
@@ -89,6 +104,7 @@ jobs:
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build pending report comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.build_comment_id }}
@@ -96,6 +112,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report build
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
@@ -119,7 +136,7 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Report build completion status
-        if: ${{ always() }}
+        if: ${{ always() && inputs.baseline_hash != inputs.patch_applied_gcchash  }}
         uses: ./.github/actions/report-build-complete-status
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
@@ -167,20 +184,36 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+        # if baseline != patch_applied then this is a apply run
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         with:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           build_only: ${{ inputs.build_only }}
           tot_hash: ${{ inputs.tot_hash }}
+          apply: true
+
+        # if baseline == patch_applied then this is a baseline run
+      - name: Checkout gcc hash
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash == inputs.patch_applied_gcchash }}
+        with:
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
+          apply: false
 
       - name: Build test pending report
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
@@ -188,6 +221,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report testing
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'pending' -context 'test' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
@@ -231,11 +265,13 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Build test complete report
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
@@ -282,13 +318,27 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+        # if baseline != patch_applied then this is a apply run
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         with:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           build_only: ${{ inputs.build_only }}
           tot_hash: ${{ inputs.tot_hash }}
+          apply: true
+
+        # if baseline == patch_applied then this is a baseline run
+      - name: Checkout gcc hash
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash == inputs.patch_applied_gcchash }}
+        with:
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
+          apply: false
 
       - name: Install dependencies
         run: |
@@ -326,11 +376,13 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Build test complete report
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
@@ -376,15 +428,30 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+        # if baseline != patch_applied then this is a apply run
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         with:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           build_only: ${{ inputs.build_only }}
           tot_hash: ${{ inputs.tot_hash }}
+          apply: true
+
+        # if baseline == patch_applied then this is a baseline run
+      - name: Checkout gcc hash
+        uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
+        if: ${{ inputs.baseline_hash == inputs.patch_applied_gcchash }}
+        with:
+          patch_name: ${{ inputs.patch_name }}
+          baseline_hash: ${{ inputs.baseline_hash }}
+          build_only: ${{ inputs.build_only }}
+          tot_hash: ${{ inputs.tot_hash }}
+          apply: false
 
       - name: Update build pending issue
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           if [ '${{ inputs.build_only }}' == 'true' ]; then
             python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.tot_hash }}
@@ -395,12 +462,14 @@ jobs:
 
       - name: Update build pending report comment
         uses: ./.github/actions/update-comment
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         with:
           comment_id: ${{ inputs.build_comment_id }}
           file_path: riscv-gnu-toolchain/comment.md
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report build
+        if: ${{ inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build started' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'pending' -context 'build--${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
@@ -451,7 +520,7 @@ jobs:
           echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
 
       - name: Report build completion status
-        if: ${{ always() }}
+        if: ${{ always() && inputs.baseline_hash != inputs.patch_applied_gcchash  }}
         uses: ./.github/actions/report-build-complete-status
         with:
           build_status: ${{ steps.build-status.outputs.build_status }}
@@ -468,13 +537,13 @@ jobs:
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
       - name: Build test starting report
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only != 'true' && inputs.baseline_hash != inputs.patch_applied_gcchash  }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only != 'true' && inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
@@ -482,7 +551,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report testing
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only != 'true' && inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'pending' -context 'test' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
@@ -502,13 +571,13 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Build test complete report
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only != 'true' && inputs.baseline_hash != inputs.patch_applied_gcchash }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only != 'true' && inputs.baseline_hash != inputs.patch_applied_gcchash }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
