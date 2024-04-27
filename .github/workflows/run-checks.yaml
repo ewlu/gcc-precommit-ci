@@ -282,29 +282,17 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Check build only
-        id: build-only
+      - name: Check apply baseline
+        id: generate-baseline
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
-          echo "build_only=true" >> $GITHUB_OUTPUT
+          echo "generate_baseline=true" >> $GITHUB_OUTPUT
 
       - name: Check early exit
         id: early-exit
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
         run: |
           echo "early_exit=true" >> $GITHUB_OUTPUT
-
-      - name: Add Build-Only Label to issue
-        if: ${{ steps.build-only.outputs.build_only == 'true' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: ${{ needs.create-issue.outputs.issue_num }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['build-only']
-            })
 
       - name: Build apply report
         run: |
@@ -369,7 +357,7 @@ jobs:
 
     outputs:
       early_exit: ${{ steps.early-exit.outputs.early_exit }}
-      build_only: ${{ steps.build-only.outputs.build_only }}
+      generate_baseline: ${{ steps.generate-baseline.outputs.build_only }}
       patch_applied_gcchash: ${{ steps.new-gcc-hash.outputs.patch_applied_gcchash }}
 
   build_test:
@@ -379,7 +367,7 @@ jobs:
     with:
       patch_name: ${{ inputs.patch_name }}
       baseline_hash: ${{ inputs.baseline_hash }}
-      build_only: ${{ needs.apply.outputs.build_only }}
+      generate_baseline: ${{ needs.apply.outputs.generate_baseline }}
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       tot_hash: ${{ inputs.tot_hash }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}

@@ -9,7 +9,7 @@ on:
       baseline_hash:
         required: true
         type: string
-      build_only:
+      generate_baseline:
         required: true
         type: string
       patch_applied_gcchash:
@@ -70,13 +70,6 @@ jobs:
           echo "Waiting for build to complete." >> comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
-      - name: Create build only report
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          echo "## Testsuite Status" > comment.md
-          echo "Testsuite tests were skipped. Patch did not apply to baseline hash https://github.com/gcc-mirror/gcc/commit/${{ inputs.baseline_hash }}. No comparison applicable." >> comment.md
-          printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
-
       - name: Create build report comment
         uses: peter-evans/create-or-update-comment@v3
         id: test-comment
@@ -87,18 +80,13 @@ jobs:
           body-path: riscv-gnu-toolchain/comment.md
           edit-mode: replace
 
-      - name: Report test warning on build only
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issuecomment-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token '${{ secrets.PATCHWORK_API }}' -repo ewlu/gcc-precommit-ci
-        continue-on-error: true
-
     outputs:
       build_comment_id: ${{ steps.build-comment.outputs.comment-id }}
       test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
 
   creg-baseline: # Check Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
+    if: ${{ inputs.generate_baseline == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -119,10 +107,9 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      baseline_hash: ${{ inputs.baseline_hash }}
-      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      baseline_hash: ${{ inputs.tot_hash }}
+      patch_applied_gcchash: ${{ inputs.tot_hash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -133,6 +120,7 @@ jobs:
 
   creg-sh-baseline: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
     needs: [initialize-comments]
+    if: ${{ inputs.generate_baseline == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -145,10 +133,9 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      baseline_hash: ${{ inputs.baseline_hash }}
-      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      baseline_hash: ${{ inputs.tot_hash }}
+      patch_applied_gcchash: ${{ inputs.tot_hash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -159,6 +146,7 @@ jobs:
 
   cmreg-baseline: # Check Multilib Regressions. Short name so I can see the matrix string in github
     needs: [initialize-comments]
+    if: ${{ inputs.generate_baseline == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -170,10 +158,9 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       mode: ${{ matrix.mode }}
       target: ${{ matrix.target }}
-      baseline_hash: ${{ inputs.baseline_hash }}
-      patch_applied_gcchash: ${{ inputs.baseline_hash }}
+      baseline_hash: ${{ inputs.tot_hash }}
+      patch_applied_gcchash: ${{ inputs.tot_hash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -206,7 +193,6 @@ jobs:
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -232,7 +218,6 @@ jobs:
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -257,7 +242,6 @@ jobs:
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
-      build_only: ${{ inputs.build_only }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}
@@ -276,8 +260,8 @@ jobs:
       patch_name: ${{ inputs.patch_name }}
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ inputs.patch_applied_gcchash }}
-      build_only: ${{ inputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}
+      generate_baseline: ${{ inputs.generate_baseline }}
       issue_num: ${{ inputs.issue_num }}
       build_comment_id: ${{ needs.initialize-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-comments.outputs.test_comment_id }}

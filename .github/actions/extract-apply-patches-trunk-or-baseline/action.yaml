@@ -7,9 +7,6 @@ inputs:
   baseline_hash:
     description: 'Baseline hash'
     required: true
-  build_only:
-    description: 'Is build only'
-    required: true
   tot_hash:
     description: 'Tip of tree hash'
     required: true
@@ -40,14 +37,6 @@ runs:
           git fetch
           git checkout ${{ inputs.baseline_hash }}
 
-      - name: Checkout trunk gcc hash
-        shell: bash
-        working-directory: riscv-gnu-toolchain
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          cd gcc
-          git checkout ${{ inputs.tot_hash }}
-          
       - name: Apply patches
         shell: bash
         if: ${{ inputs.apply == 'true' }}

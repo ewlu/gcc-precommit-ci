@@ -12,10 +12,10 @@ on:
       patch_applied_gcchash:
         required: true
         type: string
-      build_only:
+      tot_hash:
         required: true
         type: string
-      tot_hash:
+      generate_baseline:
         required: true
         type: string
       issue_num:
@@ -47,7 +47,7 @@ on:
 
 jobs:
   compare-artifacts:
-    if: ${{ always() && inputs.build_only != 'true' }} # ensure comparison always runs even on error
+    if: ${{ always() }} # ensure comparison always runs even on error
     runs-on: ubuntu-20.04
     environment: production
     defaults:
@@ -111,46 +111,49 @@ jobs:
           pip install -U pyopenssl cryptography
           pip install pygithub==1.59.1 requests
 
-      # - name: Download baseline sum files
-      #   run: |
-      #     # Download linux
-      #     python ./scripts/download_artifact.py -name gcc-linux-rv64gcv-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #     python ./scripts/download_artifact.py -name gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #     python ./scripts/download_artifact.py -name gcc-linux-rv32gc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #     # Download newlib
-      #     python ./scripts/download_artifact.py -name gcc-newlib-rv64gcv-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #     python ./scripts/download_artifact.py -name gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #     python ./scripts/download_artifact.py -name gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
-      #
-      # - name: Replace allowlist
-      #   run: |
-      #     rm -rf test/
-      #     cp -r ../test/ .
-      #
-      # - name: Extract and parse baseline results
-      #   run: |
-      #     mkdir -p previous_logs
-      #     for file in $(find ./temp -name "*.zip"); do
-      #       unzip $file
-      #       if grep -q "linux" <<< $file; then
-      #         PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find sum_files -name *.sum |paste -sd "," -`"
-      #       else
-      #         PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc newlib test/allowlist `find sum_files -name *.sum |paste -sd "," -`"
-      #       fi
-      #       ZIP_NAME=${file##*/}
-      #       FILE_NAME=${ZIP_NAME%%-multilib*}
-      #       echo $FILE_NAME
-      #       $PARSE_EXISTING_REPORT | tee "previous_logs/$FILE_NAME-multilib-report.log"
-      #       rm -rf sum_files
-      #     done
-      #
-      # - name: Separate multilib results
-      #   run: |
-      #     python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
-      #     mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
-      #     mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
-      #     ls previous_logs
-      #   continue-on-error: true
+      - name: Download baseline sum files
+        if: ${{ inputs.generate_baseline != 'true' }}
+        run: |
+          # Download linux
+          python ./scripts/download_artifact.py -name gcc-linux-rv64gcv-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name gcc-linux-rv32gc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          # Download newlib
+          python ./scripts/download_artifact.py -name gcc-newlib-rv64gcv-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+
+      - name: Replace allowlist
+        run: |
+          rm -rf test/
+          cp -r ../test/ .
+
+      - name: Extract and parse baseline results
+        if: ${{ inputs.generate_baseline != 'true' }}
+        run: |
+          mkdir -p previous_logs
+          for file in $(find ./temp -name "*.zip"); do
+            unzip $file
+            if grep -q "linux" <<< $file; then
+              PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc glibc test/allowlist `find sum_files -name *.sum |paste -sd "," -`"
+            else
+              PARSE_EXISTING_REPORT="./scripts/testsuite-filter gcc newlib test/allowlist `find sum_files -name *.sum |paste -sd "," -`"
+            fi
+            ZIP_NAME=${file##*/}
+            FILE_NAME=${ZIP_NAME%%-multilib*}
+            echo $FILE_NAME
+            $PARSE_EXISTING_REPORT | tee "previous_logs/$FILE_NAME-multilib-report.log"
+            rm -rf sum_files
+          done
+
+      - name: Separate multilib results
+        if: ${{ inputs.generate_baseline != 'true' }}
+        run: |
+          python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
+          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
+          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
+          ls previous_logs
+        continue-on-error: true
 
       # Download all current workflow artifacts
 
@@ -162,14 +165,16 @@ jobs:
             https://api.github.com/rate_limit
 
         # Download the baseline artifacts
-      - name: Download All targets
+      - name: Download All Baseline targets
+        if: ${{ inputs.generate_baseline == 'true' }}
         uses: ./.github/actions/download-all-comparison-artifacts
         with:
           gcchash: ${{ inputs.baseline_hash }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: 'ewlu/gcc-precommit-ci'
 
-      - name: Extract artifacts
+      - name: Extract baseline artifacts
+        if: ${{ inputs.generate_baseline == 'true' }}
         run: |
           ls ./temp/
           mkdir -p current_logs
@@ -181,14 +186,14 @@ jobs:
           mkdir -p current_logs
 
         # Download the applied artifacts
-      - name: Download All targets
+      - name: Download All Applied targets
         uses: ./.github/actions/download-all-comparison-artifacts
         with:
           gcchash: ${{ inputs.patch_applied_gcchash }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: 'ewlu/gcc-precommit-ci'
 
-      - name: Extract artifacts
+      - name: Extract applied artifacts
         run: |
           ls ./temp/
           mkdir -p current_logs
@@ -204,10 +209,11 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/rate_limit
 
-      # - name: Separate multilib logs
-      #   run: |
-      #     python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
-      #   continue-on-error: true
+      - name: Separate multilib logs
+        if: ${{ inputs.generate_baseline != 'true' }}
+        run: |
+          python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
+        continue-on-error: true
 
       - name: Compare artifacts
         run: |
@@ -218,12 +224,6 @@ jobs:
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -comment ${{ inputs.build_comment_id }} -repo ewlu/gcc-precommit-ci -failure -baseline ${{ inputs.baseline_hash }}
           ls current_logs
-        continue-on-error: true
-
-      - name: Remove testsuite failures on build-only
-        if: ${{ inputs.build_only == 'true' }}
-        run: |
-          rm current_logs/failed_testsuite.txt
         continue-on-error: true
 
       - name: Make artifact zips
@@ -261,7 +261,7 @@ jobs:
       workflow_dispatch: ${{ steps.dispatch.outputs.workflow_dispatch }}
 
   generate-issues:
-    if: ${{ always() && inputs.build_only != 'true' }} # ensure generate issues always runs even on error
+    if: ${{ always() }} # ensure generate issues always runs even on error
     needs: [compare-artifacts]
     runs-on: ubuntu-20.04
     permissions:

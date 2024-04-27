@@ -19,9 +19,6 @@ inputs:
   tot_hash:
     description: 'tip of tree gcc hash'
     required: true
-  build_only:
-    description: 'is build only'
-    required: true
   issue_num:
     description: 'issue id'
     required: true
@@ -46,7 +43,7 @@ runs:
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then export HASH=${{ inputs.tot_hash }}; else export HASH=${{ inputs.baseline_hash }}; fi
+          export HASH=${{ inputs.baseline_hash }}
           python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Success' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
@@ -55,7 +52,7 @@ runs:
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
-          if [ '${{ inputs.build_only }}' == 'true' ]; then export HASH=${{ inputs.tot_hash }}; else export HASH=${{ inputs.baseline_hash }}; fi
+          export HASH=${{ inputs.baseline_hash }}
           python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Build failure. Please check the ${{ inputs.build_log_name }} artifact' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 

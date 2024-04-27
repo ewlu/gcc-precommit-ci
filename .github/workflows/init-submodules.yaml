@@ -33,6 +33,15 @@ jobs:
         run: |
           git submodule update --init riscv-gnu-toolchain
 
+      - name: Determine baseline
+        id: baseline-hash
+        run: |
+          python ./scripts/get_baseline_hash.py -token ${{ secrets.GITHUB_TOKEN }}
+
+          if [ '${{ inputs.baseline_hash }}' == '' ] ; then export BASELINE_HASH=$(cat baseline.txt); else export BASELINE_HASH=${{ inputs.baseline_hash }}; fi
+          echo $BASELINE_HASH
+          echo "baseline_hash=$BASELINE_HASH" >> $GITHUB_OUTPUT
+
       - name: Retrieve cache
         id: retrieve-cache
         uses: actions/cache@v3
@@ -74,9 +83,6 @@ jobs:
         run: |
           git checkout master
           git pull
-          if [ '${{ inputs.baseline_hash }}' == '' ] ; then export BASELINE_HASH=$(git rev-parse HEAD); else export BASELINE_HASH=${{ inputs.baseline_hash }}; fi
-          echo $BASELINE_HASH
-          echo "baseline_hash=$BASELINE_HASH" >> $GITHUB_OUTPUT
           if [ '${{ inputs.tot_hash }}' != '' ]; then git checkout ${{ inputs.tot_hash }}; fi
           export TOT_HASH=$(git rev-parse HEAD)
           echo $TOT_HASH
@@ -118,5 +124,5 @@ jobs:
           retention-days: 5
 
     outputs:
-      baseline_hash: ${{ steps.tot-hash.outputs.baseline_hash }}
+      baseline_hash: ${{ steps.baseline-hash.outputs.baseline_hash }}
       tot_hash: ${{ steps.tot-hash.outputs.tot_hash }}
