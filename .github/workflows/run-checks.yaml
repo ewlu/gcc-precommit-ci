@@ -357,7 +357,7 @@ jobs:
 
     outputs:
       early_exit: ${{ steps.early-exit.outputs.early_exit }}
-      generate_baseline: ${{ steps.generate-baseline.outputs.build_only }}
+      generate_baseline: ${{ steps.generate-baseline.outputs.generate_baseline }}
       patch_applied_gcchash: ${{ steps.new-gcc-hash.outputs.patch_applied_gcchash }}
 
   build_test:
