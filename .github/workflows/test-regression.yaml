@@ -18,6 +18,9 @@ on:
       patch_applied_gcchash:
         required: true
         type: string
+      generate_baseline:
+        required: true
+        type: string
       multilib:
         required: true
         type: string
@@ -76,6 +79,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: true
 
         # if tip of tree == patch_applied then this is a baseline run
@@ -86,6 +90,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: false
 
       - name: Build pending comment
@@ -182,6 +187,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: true
 
         # if tip of tree == patch_applied then this is a baseline run
@@ -192,6 +198,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: false
 
       - name: Build test pending report
@@ -314,6 +321,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: true
 
         # if tip of tree == patch_applied then this is a baseline run
@@ -324,6 +332,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: false
 
       - name: Install dependencies
@@ -422,6 +431,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: true
 
         # if tip of tree == patch_applied then this is a baseline run
@@ -432,6 +442,7 @@ jobs:
           patch_name: ${{ inputs.patch_name }}
           baseline_hash: ${{ inputs.baseline_hash }}
           tot_hash: ${{ inputs.tot_hash }}
+          generate_baseline: ${{ inputs.generate_baseline }}
           apply: false
 
       - name: Update build pending issue

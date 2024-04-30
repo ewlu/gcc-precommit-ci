@@ -10,6 +10,9 @@ inputs:
   tot_hash:
     description: 'Tip of tree hash'
     required: true
+  generate_baseline:
+    description: 'Regenerating baseline build'
+    required: true
   apply:
     description: 'Apply the patch'
     required: true
@@ -30,12 +33,22 @@ runs:
           unzip ${{ inputs.patch_name }}-downloaded-patches.zip
 
       - name: Checkout gcc hash
+        if: ${{ inputs.generate_baseline != 'true' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
           cd gcc
           git fetch
           git checkout ${{ inputs.baseline_hash }}
+
+      - name: Checkout gcc hash
+        if: ${{ inputs.generate_baseline == 'true' }}
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        run: |
+          cd gcc
+          git fetch
+          git checkout ${{ inputs.tot_hash }}
 
       - name: Apply patches
         shell: bash
