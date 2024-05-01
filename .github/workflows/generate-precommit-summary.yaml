@@ -169,7 +169,7 @@ jobs:
         if: ${{ inputs.generate_baseline == 'true' }}
         uses: ./.github/actions/download-all-comparison-artifacts
         with:
-          gcchash: ${{ inputs.baseline_hash }}
+          gcchash: ${{ inputs.tot_hash }}
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: 'ewlu/gcc-precommit-ci'
 
