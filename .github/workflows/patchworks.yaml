@@ -54,10 +54,10 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - name: Clone riscv-gnu-toolchain
-        working-directory: ./
-        run: |
-          git submodule update --init riscv-gnu-toolchain
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
 
       - name: Install dependencies
         run: |

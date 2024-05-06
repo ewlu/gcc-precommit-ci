@@ -28,10 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Clone riscv-gnu-toolchain
-        working-directory: ./
-        run: |
-          git submodule update --init riscv-gnu-toolchain
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
 
       - name: Determine baseline
         id: baseline-hash
@@ -58,6 +58,7 @@ jobs:
           key: submodules-archive-9 # Numbered archive to allow for easy transition when bumping submodules
 
       - name: Initalize submodules cache
+        id: cache-init
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
         run: |
           git submodule update --init --recursive --depth 1 binutils
@@ -66,8 +67,33 @@ jobs:
           git submodule update --init --recursive --depth 1 glibc
           git submodule update --init --recursive --depth 1 newlib
           git submodule update --init --recursive --depth 1 qemu
-          rm -rf gcc
-          git clone git://gcc.gnu.org/git/gcc.git
+        continue-on-error: true
+
+      - name: Initalize submodules cache
+        if: steps.cache-init.outcome == 'failure'
+        run: |
+          echo "Failed to initialize cache submodules. Retrying in 1 min"
+          sleep 60
+          git submodule update --init --recursive --depth 1 binutils
+          git submodule update --init --recursive --depth 1 dejagnu
+          git submodule update --init --recursive --depth 1 gdb
+          git submodule update --init --recursive --depth 1 glibc
+          git submodule update --init --recursive --depth 1 newlib
+          git submodule update --init --recursive --depth 1 qemu
+
+      - name: Initialize gcc
+        if: steps.retrieve-cache.outputs.cache-hit != 'true'
+        id: gcc-cache
+        uses: ./.github/actions/common/init-and-pull-gcc
+        with:
+          init: true
+
+        # Does not remove and reclone gcc if we hit cache
+      - name: Checkout GCC
+        if: steps.gcc-cache.outcome == 'skipped'
+        uses: ./.github/actions/common/init-and-pull-gcc
+        with:
+          init: false
 
       - name: Apply newlib fixups
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
@@ -81,8 +107,6 @@ jobs:
         working-directory: riscv-gnu-toolchain/gcc
         id: tot-hash
         run: |
-          git checkout master
-          git pull
           if [ '${{ inputs.tot_hash }}' != '' ]; then git checkout ${{ inputs.tot_hash }}; fi
           export TOT_HASH=$(git rev-parse HEAD)
           echo $TOT_HASH
