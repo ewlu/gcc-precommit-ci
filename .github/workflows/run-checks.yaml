@@ -141,6 +141,18 @@ jobs:
           content-filepath: riscv-gnu-toolchain/issue.md
           title: 'Patch Status ${{ inputs.patch_name }}'
 
+      - name: Add Staging Label to issue
+        if: ${{ github.workflow == 'Staging' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ steps.create-issue.outputs.issue-number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['staging']
+            })
+
       - name: Build additional info link
         id: link
         run: |
@@ -324,19 +336,19 @@ jobs:
           edit-mode: replace
 
       - name: Report patch failed to apply to tip of tree
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch failed to apply to tip of tree.' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'warning' -context 'apply-patch' -token ${{ secrets.PATCHWORK_API }}
         continue-on-error: true
 
       - name: Report patch applied to tip of tree successfully
-        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        if: ${{ steps.apply-tip-of-tree.outputs.apply_tot == 'true' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch applied' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'success' -context 'apply-patch' -token ${{ secrets.PATCHWORK_API }}
         continue-on-error: true
 
       - name: Report patch failed to apply anywhere
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch failed to apply' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'fail' -context 'apply-patch' -token ${{ secrets.PATCHWORK_API }}
         continue-on-error: true

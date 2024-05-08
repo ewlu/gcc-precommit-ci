@@ -1,0 +1,60 @@
+name: Staging
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  get-patch-info:
+    runs-on: [self-hosted, ping]
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - name: Cleanup build folder
+        working-directory: ./
+        run: |
+          ls -la ./
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          ls -la ./
+
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt install python3 -y
+          sudo apt install python-is-python3 -y
+          sudo apt install zip -y
+
+      - name: Get patch data
+        id: data
+        run: |
+          python scripts/get_staging_patch.py -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }}
+          echo "timestamp=$(cat timestamp.txt)" >> $GITHUB_OUTPUT
+          echo "baseline_hash=$(cat baseline_hash.txt)" >> $GITHUB_OUTPUT
+          echo "tot_hash=$(cat tot_hash.txt)" >> $GITHUB_OUTPUT
+          echo "patch_id=$(cat patch_id.txt)" >> $GITHUB_OUTPUT
+
+    outputs:
+      timestamp: ${{ steps.data.outputs.timestamp }}
+      baseline_gcc_hash: ${{ steps.data.outputs.baseline_hash }}
+      tip_of_tree_hash: ${{ steps.data.outputs.tot_hash }}
+      patch_id: ${{ steps.data.outputs.patch_id }}
+
+  run-workflow:
+    needs: [get-patch-info]
+    uses: ./.github/workflows/patchworks.yaml
+    permissions:
+      issues: write
+    with:
+      timestamp: ${{ needs.get-patch-info.outputs.timestamp }}
+      baseline_gcc_hash: ${{ needs.get-patch-info.outputs.baseline_gcc_hash }}
+      tip_of_tree_hash: ${{ needs.get-patch-info.outputs.tip_of_tree_hash }}
+      patch_id: ${{ needs.get-patch-info.outputs.patch_id }}

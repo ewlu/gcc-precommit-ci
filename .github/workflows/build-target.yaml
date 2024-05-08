@@ -88,7 +88,7 @@ jobs:
           edit-mode: replace
 
       - name: Report test warning on build only
-        if: ${{ inputs.build_only == 'true' }}
+        if: ${{ inputs.build_only == 'true' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ inputs.issue_num }}#issuecomment-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token '${{ secrets.PATCHWORK_API }}' -repo ewlu/gcc-precommit-ci
         continue-on-error: true

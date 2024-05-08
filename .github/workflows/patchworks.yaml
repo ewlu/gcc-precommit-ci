@@ -5,9 +5,20 @@ on:
     # Run every 15 minutes offset by 7 to try to avoid github's high-load times
     # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
     - cron: 7,22,37,52 * * * *
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      timestamp:
+        description: 'Patch Timestamp (UTC)'
+        type: string
+      baseline_gcc_hash:
+        description: 'Baseline hash'
+        type: string
+      tip_of_tree_hash:
+        description: 'Trunk hash'
+        type: string
+      patch_id:
+        description: 'Patch id (patch series not supported)'
+        type: string
   workflow_dispatch:
     branches:
       - main

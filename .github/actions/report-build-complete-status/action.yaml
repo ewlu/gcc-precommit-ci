@@ -79,7 +79,7 @@ runs:
             })
 
       - name: Report error on build-failure
-        if: ${{ inputs.build_status == 'failure' }}
+        if: ${{ inputs.build_status == 'failure' && github.workflow != 'Staging' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
@@ -87,7 +87,7 @@ runs:
         continue-on-error: true
 
       - name: Report build success
-        if: ${{ inputs.build_status == 'success' }}
+        if: ${{ inputs.build_status == 'success' && github.workflow != 'Staging' }}
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
