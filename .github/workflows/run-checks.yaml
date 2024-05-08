@@ -384,16 +384,183 @@ jobs:
       build_only: ${{ steps.build-only.outputs.build_only }}
       patch_applied_gcchash: ${{ steps.new-gcc-hash.outputs.patch_applied_gcchash }}
 
-  build_test:
+
+  ################################################################################
+  #                         Originally build-target.yaml                         #
+  ################################################################################
+
+  initialize-build-test-comments:
     needs: [download_patches, create-issue, apply]
     if: ${{ needs.apply.outputs.early_exit != 'true' }}
-    uses: ./.github/workflows/build-target.yaml
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
+
+      - name: Download patches artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.patch_name }}-downloaded-patches
+          path: ./riscv-gnu-toolchain
+
+      - name: Extract patches
+        run: |
+          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+
+      - name: Create build pending comment
+        run: |
+          echo "## Build GCC Status" > build_pending_comment.md
+          printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> build_pending_comment.md
+
+      - name: Create build report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: build-comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          issue-number: ${{ needs.create-issue.outputs.issue_num }}
+          body-path: riscv-gnu-toolchain/build_pending_comment.md
+          edit-mode: replace
+
+      - name: Create test waiting comment
+        run: |
+          echo "## Testsuite Status" > comment.md
+          echo "Waiting for build to complete." >> comment.md
+          printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> comment.md
+
+      - name: Create build only report
+        if: ${{ needs.apply.outputs.build_only == 'true' }}
+        run: |
+          echo "## Testsuite Status" > comment.md
+          echo "Testsuite tests were skipped. Patch did not apply to baseline hash https://github.com/gcc-mirror/gcc/commit/${{ inputs.baseline_hash }}. No comparison applicable." >> comment.md
+          printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> comment.md
+
+      - name: Create build report comment
+        uses: peter-evans/create-or-update-comment@v3
+        id: test-comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          issue-number: ${{ needs.create-issue.outputs.issue_num }}
+          body-path: riscv-gnu-toolchain/comment.md
+          edit-mode: replace
+
+      - name: Report test warning on build only
+        if: ${{ needs.apply.outputs.build_only == 'true' && github.workflow != 'Staging' }}
+        run: |
+          python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token '${{ secrets.PATCHWORK_API }}' -repo ewlu/gcc-precommit-ci
+        continue-on-error: true
+
+    outputs:
+      build_comment_id: ${{ steps.build-comment.outputs.comment-id }}
+      test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
+
+  creg: # Check Regressions. Short name so I can see the matrix string in github
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [linux]
+        target:
+          [
+            # rv32gcv-ilp32d, # rv32 vector
+            # rv64gcv-lp64d, # rv64 vector
+            rv32gc_zba_zbb_zbc_zbs-ilp32d, # rv32 bitmanip
+            rv64gc_zba_zbb_zbc_zbs-lp64d, # rv64 bitmanip
+            # rv32gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-ilp32d, # rv32 vector crypto
+            # rv64gcv_zvbb_zvbc_zvkg_zvkn_zvknc_zvkned_zvkng_zvknha_zvknhb_zvks_zvksc_zvksed_zvksg_zvksh_zvkt-lp64d, # rv64 vector crypto
+            # rv64imafdcv_zicond_zawrs_zbc_zvkng_zvksg_zvbb_zvbc_zicsr_zba_zbb_zbs_zicbom_zicbop_zicboz_zfhmin_zkt-lp64d, # RVA23U64 profile with optional extensions, excluding unsupported extensions
+          ]
+        multilib: [non-multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ needs.apply.outputs.build_only }}
+      issue_num: ${{ needs.create-issue.outputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
+      run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ needs.create-issue.outputs.additional_info }}
+    secrets: inherit
+
+  creg-sh: # Check Regressions Self Hosted. Short name so I can see the matrix string in github
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [newlib, linux]
+        target:
+          [ rv64gcv-lp64d ] # Dummy placeholder. runs rv32/64gcv
+        multilib: [multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ needs.apply.outputs.build_only }}
+      issue_num: ${{ needs.create-issue.outputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
+      run_on_self_hosted: true
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ needs.create-issue.outputs.additional_info }}
+    secrets: inherit
+
+  cmreg: # Check Multilib Regressions. Short name so I can see the matrix string in github
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments]
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [newlib]
+        target: [rv64gc-lp64d] # Dummy placeholder. Actually runs rv32/rv64 multilib
+        multilib: [multilib]
+    uses: ./.github/workflows/test-regression.yaml
+    with:
+      patch_name: ${{ inputs.patch_name }}
+      mode: ${{ matrix.mode }}
+      target: ${{ matrix.target }}
+      baseline_hash: ${{ inputs.baseline_hash }}
+      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+      multilib: ${{ matrix.multilib }}
+      build_only: ${{ needs.apply.outputs.build_only }}
+      issue_num: ${{ needs.create-issue.outputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
+      run_on_self_hosted: false
+      tot_hash: ${{ inputs.tot_hash }}
+      additional_info: ${{ needs.create-issue.outputs.additional_info }}
+    secrets: inherit
+
+  summarize:
+    if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg, cmreg, creg-sh]
+    permissions:
+      issues: write
+    uses: ./.github/workflows/generate-precommit-summary.yaml
     with:
       patch_name: ${{ inputs.patch_name }}
       baseline_hash: ${{ inputs.baseline_hash }}
-      build_only: ${{ needs.apply.outputs.build_only }}
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+      build_only: ${{ needs.apply.outputs.build_only }}
       tot_hash: ${{ inputs.tot_hash }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
+      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
     secrets: inherit
