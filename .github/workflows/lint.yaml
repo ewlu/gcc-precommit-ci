@@ -63,6 +63,7 @@ jobs:
           pip3 install termcolor unidiff
 
       - name: Report start linter
+        if: ${{ github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint starting' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.lint_comment_id }}' -state 'pending' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
 
@@ -118,7 +119,7 @@ jobs:
             })
 
       - name: Report linter warning
-        if: ${{ steps.lint.outputs.lint_failed == 'true' }}
+        if: ${{ steps.lint.outputs.lint_failed == 'true' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint failed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.lint_comment_id }}' -state 'warning' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
 
@@ -140,6 +141,6 @@ jobs:
           edit-mode: replace
 
       - name: Report linter success
-        if: ${{ steps.lint.outputs.lint_failed == 'false' }}
+        if: ${{ steps.lint.outputs.lint_failed == 'false' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Lint passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.lint_comment_id }}' -state 'success' -context 'lint' -token ${{ secrets.PATCHWORK_API }}
