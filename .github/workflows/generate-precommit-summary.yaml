@@ -143,12 +143,13 @@ jobs:
             $PARSE_EXISTING_REPORT | tee "previous_logs/$FILE_NAME-multilib-report.log"
             rm -rf sum_files
           done
+          ls previous_logs
 
       - name: Separate multilib results
         run: |
           python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
-          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
-          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
+          # mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
+          # mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
           ls previous_logs
         continue-on-error: true
 
@@ -187,11 +188,15 @@ jobs:
       - name: Separate multilib logs
         run: |
           python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
+          ls current_logs
         continue-on-error: true
 
       - name: Compare artifacts
         run: |
+          echo "current_logs:"
           ls current_logs
+          echo "previous_logs:"
+          ls previous_logs
           python ./scripts/compare_all_artifacts.py -hash ${{ inputs.patch_applied_gcchash }}
 
       - name: Search for build failures
