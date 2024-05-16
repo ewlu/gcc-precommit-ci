@@ -252,7 +252,6 @@ jobs:
       - name: Checkout gcc hash
         run: |
           cd gcc
-          git fetch
           git checkout ${{ inputs.baseline_hash }}
 
       - name: Apply patches to baseline

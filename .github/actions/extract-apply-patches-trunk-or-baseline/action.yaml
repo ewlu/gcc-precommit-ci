@@ -34,7 +34,6 @@ runs:
         working-directory: riscv-gnu-toolchain
         run: |
           cd gcc
-          git fetch
           git checkout ${{ inputs.baseline_hash }}
 
       - name: Checkout trunk gcc hash

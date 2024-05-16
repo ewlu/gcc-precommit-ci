@@ -86,16 +86,16 @@ jobs:
 
       - name: Initalize gcc
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
-        run: |
-          rm -rf gcc
-          git clone git://gcc.gnu.org/git/gcc.git
+        id: gcc-cache
+        uses: ./.github/actions/common/init-and-pull-gcc
+        with:
+          init: true
 
-      - name: Pull gcc
-        id: gcc-hash
-        run: |
-          cd gcc
-          git checkout master
-          git pull
+      - name: Checkout GCC
+        if: steps.gcc-cache.outcome == 'skipped'
+        uses: ./.github/actions/common/init-and-pull-gcc
+        with:
+          init: false
 
       - name: Create directories
         run: |
