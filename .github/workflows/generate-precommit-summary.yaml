@@ -121,6 +121,7 @@ jobs:
           python ./scripts/download_artifact.py -name gcc-newlib-rv64gcv-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
           python ./scripts/download_artifact.py -name gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
           python ./scripts/download_artifact.py -name gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
+          python ./scripts/download_artifact.py -name gcc-newlib-rv64imc_zba_zbb_zbc_zbs-lp64d-${{ inputs.baseline_hash }}-multilib-sum-files -repo patrick-rivos/gcc-postcommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp
 
       - name: Replace allowlist
         run: |

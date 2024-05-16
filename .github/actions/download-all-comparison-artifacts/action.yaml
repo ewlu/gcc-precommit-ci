@@ -55,4 +55,12 @@ runs:
         github-token: ${{ inputs.token }}
         repo: ${{ inputs.repo }}
 
+    - name: Download newlib rv32 imc bitmanip non-multilib
+      uses: ./.github/actions/common/download-comparison-artifacts
+      with:
+        report-artifact-name: gcc-newlib-rv32imc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.gcchash }}-non-multilib-report.log
+        binary-artifact-name: gcc-newlib-rv32imc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.gcchash }}-non-multilib
+        github-token: ${{ inputs.token }}
+        repo: ${{ inputs.repo }}
+
     # End download
