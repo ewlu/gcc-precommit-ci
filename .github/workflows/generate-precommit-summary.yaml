@@ -188,6 +188,7 @@ jobs:
       - name: Separate multilib logs
         run: |
           python scripts/separate_multilib_results.py -indir current_logs -outdir current_logs
+          mv current_logs/gcc-newlib-rv32imc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.patch_applied_gcchash }}-non-multilib-report.log current_logs/gcc-newlib-rv32imc_zba_zbb_zbc_zbs-ilp32d-${{ inputs.patch_applied_gcchash }}-multilib-report.log
         continue-on-error: true
 
       - name: Compare artifacts
