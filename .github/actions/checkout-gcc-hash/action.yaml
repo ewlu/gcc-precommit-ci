@@ -1,0 +1,33 @@
+name: "Checkout gcc hash"
+description: "Checks out gcc hash with retries"
+inputs:
+  hash:
+    description: 'hash to checkout to'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Checkout hash
+        shell: bash
+        working-directory: ./riscv-gnu-toolchain
+        id: pull
+        run: |
+          cd gcc
+          git checkout master
+          git pull
+          git checkout ${{ inputs.hash }}
+        continue-on-error: true
+
+      - name: Sleep and retry
+        shell: bash
+        working-directory: ./riscv-gnu-toolchain
+        if: ${{ steps.pull.outcome == 'failure' }}
+        run: |
+          echo "Failed to checkout and pull gcc. Retrying in 1 min"
+          sleep 60
+          cd gcc
+          git checkout master
+          git pull
+          git checkout ${{ inputs.hash }}
+
