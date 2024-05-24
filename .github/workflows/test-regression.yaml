@@ -312,7 +312,7 @@ jobs:
       - name: Build
         run: |
           cd build
-          make ${{ inputs.mode }} -j20
+          make ${{ inputs.mode }} -j 32
 
       - name: Replace allowlist
         run: |
