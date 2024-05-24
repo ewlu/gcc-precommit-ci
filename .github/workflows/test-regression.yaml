@@ -248,7 +248,7 @@ jobs:
   # We need to rebuild since restoring the artifact won't work
   # (the new path will break the existing build).
   rerun-timeouts:
-    runs-on: [self-hosted, build-staging]
+    runs-on: [self-hosted, build]
     environment: production
     needs: [build, test]
     if: ${{ failure() && needs.build.outputs.build_status == 'success' && inputs.run_on_self_hosted != 'true' }}
@@ -343,7 +343,7 @@ jobs:
   # We need to rebuild since restoring the artifact won't work
   # (the new path will break the existing build).
   run-on-self-hosted:
-    runs-on: [self-hosted, build-staging]
+    runs-on: [self-hosted, build]
     environment: production
     if: ${{ inputs.run_on_self_hosted == 'true' }}
     timeout-minutes: 1440 # 24 hours
