@@ -200,16 +200,13 @@ jobs:
           sudo apt install python3 -y
           sudo apt install python-is-python3 -y
 
+      # There is only one github target now which is rv32imc_zba_zbb_zbc_zbs-ilp32
       - name: Configure
         run: |
           mkdir build
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
-          if [ '${{ inputs.mode }}' == 'newlib']; then
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-reduced-multilib-set
-          else
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
-          fi
+          ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
 
       - name: Restore Stage2 Artifacts
         uses: ./.github/actions/common/restore-stage-2
@@ -298,16 +295,13 @@ jobs:
           sudo apt install python3 -y
           sudo apt install python-is-python3 -y
 
+      # There is only one github target now which is rv32imc_zba_zbb_zbc_zbs-ilp32
       - name: Configure
         run: |
           mkdir build
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
-          if [ '${{ inputs.mode }}' == 'newlib' ]; then
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}-reduced-multilib-set
-          else
-            ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
-          fi
+          ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
 
       - name: Build
         run: |
@@ -414,27 +408,23 @@ jobs:
           export BUILD_LOG_NAME=$(tail -n 1 patches/${{ inputs.patch_name }})-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }}-build-log
           echo "build_log_name=$BUILD_LOG_NAME" >> $GITHUB_OUTPUT
 
+      - name: Get target string
+        id: target-string
+        run: |
+          if [ '${{ inputs.mode }}' == 'newlib' ] && [ '${{ inputs.target }}' == 'rv64gcv-lp64d' ];
+          then
+            echo "target_string=rv64gcv-lp64d-reduced-multilib-set" >> $GITHUB_OUTPUT
+          else
+            echo "target_string=${{ inputs.target }}" >> $GITHUB_OUTPUT
+          fi
+
       # Don't upload stage 2 artifacts on self-hosted runners
       # in interest of resources
-      - name: Build gcc linux
-        if: ${{ inputs.mode == 'linux' }}
-        id: build-status-linux
+      - name: Build gcc
+        id: build-gcc-status
         uses: ./.github/actions/common/build-target
         with:
-          multilib_target_string: 'rv64gcv-lp64d'
-          build_log_name: ${{ steps.build-log.outputs.build_log_name }}
-          upload_stage2_artifacts: 'false'
-          mode: ${{ inputs.mode }}
-          target: ${{ inputs.target }}
-          gcchash: ${{ inputs.patch_applied_gcchash }}
-          multilib: ${{ inputs.multilib }}
-
-      - name: Build gcc newlib
-        if: ${{ inputs.mode == 'newlib' }}
-        id: build-status-newlib
-        uses: ./.github/actions/common/build-target
-        with:
-          multilib_target_string: 'rv64gcv-lp64d-reduced-multilib-set'
+          multilib_target_string: ${{ steps.target-string.outputs.target_string }}
           build_log_name: ${{ steps.build-log.outputs.build_log_name }}
           upload_stage2_artifacts: 'false'
           mode: ${{ inputs.mode }}
@@ -446,11 +436,7 @@ jobs:
         if: ${{ always() }}
         id: build-status
         run: |
-          if [ "${{ inputs.mode }}" == "newlib" ]; then 
-            export BUILD_STATUS=${{steps.build-status-newlib.outputs.build_status }}
-          else
-            export BUILD_STATUS=${{steps.build-status-linux.outputs.build_status }}
-          fi
+          export BUILD_STATUS=${{steps.build-gcc-status.outputs.build_status }}
           echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
 
       - name: Report build completion status
