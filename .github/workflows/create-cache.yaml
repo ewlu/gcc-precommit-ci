@@ -5,7 +5,7 @@ on:
     # Run at 1:07 on mondays and fridays 
     # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
     - cron: 7 1 * * 1,5
-  push:
+  pull_request:
     branches:
       - main
 
