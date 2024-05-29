@@ -18,7 +18,7 @@ runs:
   using: "composite"
   steps:
       - name: Download patches artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain

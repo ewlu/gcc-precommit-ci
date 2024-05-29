@@ -13,7 +13,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -82,7 +82,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -112,7 +112,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -141,7 +141,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
