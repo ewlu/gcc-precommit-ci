@@ -82,7 +82,7 @@ jobs:
             riscv-gnu-toolchain/newlib
             riscv-gnu-toolchain/pk
             riscv-gnu-toolchain/qemu
-          key: submodules-archive-9
+          key: submodules-archive-10
 
       - name: Initalize gcc
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
