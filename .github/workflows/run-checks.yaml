@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -28,13 +28,13 @@ jobs:
           free_up_space: false
 
       - name: Download patch urls artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: patch_urls
           path: ./riscv-gnu-toolchain
 
       - name: Download patchworks urls artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: patchworks_metadata_files
           path: ./riscv-gnu-toolchain
@@ -55,7 +55,7 @@ jobs:
           zip -r ${{ inputs.patch_name }}-downloaded-patches.zip patches
 
       - name: Upload patches artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: |
@@ -71,7 +71,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -79,7 +79,7 @@ jobs:
           free_up_space: false
 
       - name: Download patches artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain
@@ -115,7 +115,7 @@ jobs:
           cat issue.md
 
       - name: Create initial issue
-        uses: peter-evans/create-issue-from-file@v4
+        uses: peter-evans/create-issue-from-file@v5
         id: create-issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -125,7 +125,7 @@ jobs:
 
       - name: Add Staging Label to issue
         if: ${{ github.workflow == 'Staging' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.addLabels({
@@ -151,7 +151,7 @@ jobs:
           echo "Lint pending" >> lint_pending.md
 
       - name: Create lint report comment
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: lint-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -166,7 +166,7 @@ jobs:
           printf "\n[Additional information](${{ steps.link.outputs.additional }})\n" >> comment.md
 
       - name: Create apply report comment
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: apply-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -202,7 +202,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -210,7 +210,7 @@ jobs:
           free_up_space: false
 
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
@@ -222,7 +222,7 @@ jobs:
           rm -rf cache.zip
 
       - name: Download patches artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain
@@ -289,7 +289,7 @@ jobs:
 
       - name: Add Build-Only Label to issue
         if: ${{ steps.build-only.outputs.build_only == 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.addLabels({
@@ -307,7 +307,7 @@ jobs:
           printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> trimmed_comment.md
 
       - name: Update apply report comment
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: apply-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -336,7 +336,7 @@ jobs:
 
       - name: Add apply-failure label if patch failed to apply anywhere
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.addLabels({
@@ -378,7 +378,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -386,7 +386,7 @@ jobs:
           free_up_space: false
 
       - name: Download patches artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain
@@ -401,7 +401,7 @@ jobs:
           printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> build_pending_comment.md
 
       - name: Create build report comment
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: build-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -424,7 +424,7 @@ jobs:
           printf "\n[Additional information](${{ needs.create-issue.outputs.additional_info }})\n" >> comment.md
 
       - name: Create build report comment
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: test-comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

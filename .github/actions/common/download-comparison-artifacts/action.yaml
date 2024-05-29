@@ -15,7 +15,7 @@ runs:
   steps:
     - name: Download report from this workflow
       if: ${{ !cancelled() }}
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.report-artifact-name }}
         path: ./riscv-gnu-toolchain/current_logs
@@ -32,7 +32,7 @@ runs:
 
     - name: Download rv32 non-multilib binary
       if: ${{ !cancelled() && hashFiles(format('./current_logs/{0}', inputs.report-artifact-name)) == '' }}
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.binary-artifact-name }}
         path: ./riscv-gnu-toolchain/temp

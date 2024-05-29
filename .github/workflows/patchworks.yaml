@@ -52,7 +52,7 @@ jobs:
           rm -rf ./.??* || true
           ls -la ./
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -115,7 +115,7 @@ jobs:
 
       - name: Upload patch urls zip
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: patch_urls
           path: |
@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload patchworks metadata zip
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: patchworks_metadata_files
           path: |

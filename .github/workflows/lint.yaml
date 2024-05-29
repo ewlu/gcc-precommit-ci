@@ -29,7 +29,7 @@ jobs:
       run:
         working-directory: riscv-gnu-toolchain
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup env
         uses: ./.github/actions/common/setup-env
@@ -37,7 +37,7 @@ jobs:
           free_up_space: false
 
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gcc-sources-${{ inputs.baseline_hash }}
           path: ./riscv-gnu-toolchain
@@ -49,7 +49,7 @@ jobs:
           rm -rf cache.zip
 
       - name: Download patches artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain
@@ -97,7 +97,7 @@ jobs:
 
       - name: Update lint failed comment report
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: lint-fail
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Add linter-failure Label to issue
         if: ${{ steps.lint.outputs.lint_failed == 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.addLabels({
@@ -131,7 +131,7 @@ jobs:
 
       - name: Update lint passed comment report
         if: ${{ steps.lint.outputs.lint_failed == 'false' }}
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         id: lint-pass
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
