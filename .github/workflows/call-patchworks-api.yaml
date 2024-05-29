@@ -20,14 +20,6 @@ jobs:
         with:
           free_up_space: false
 
-      - name: Bump pyopenssl and crypto
-        run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install pygithub==1.59.1 requests
-
       - name: Get patch-name
         id: patch-name
         run: |
@@ -50,9 +42,18 @@ jobs:
           echo "check=$CHECK" >> $GITHUB_OUTPUT
           echo "context=$CONTEXT" >> $GITHUB_OUTPUT
 
+      - name: Setup python env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+          
       - name: Download patch
         run: |
           mkdir temp
+          source venv/bin/activate
           python ./scripts/download_artifact.py -name ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches -repo "ewlu/gcc-precommit-ci" -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
 
       - name: Extract patch
@@ -64,7 +65,8 @@ jobs:
         id: patch-id
         run: |
           export PATCH_ID=$(tail -n 1 ./patches/${{ steps.patch-name.outputs.patch_name }})
-          echo $PATCH_ID
+          echo $PATCH_ID1.59.1 requests
+
           echo "patch_id=$PATCH_ID" >> $GITHUB_OUTPUT
 
     outputs:
@@ -89,13 +91,13 @@ jobs:
         with:
           free_up_space: false
 
-      - name: Bump pyopenssl and crypto
+      - name: Setup python env
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install requests
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
 
       - name: Report pass
         run: |
@@ -119,16 +121,17 @@ jobs:
         with:
           free_up_space: false
 
-      - name: Bump pyopenssl and crypto
+      - name: Setup python env
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install requests
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
 
       - name: Report Warning
         run: |
+          source venv/bin/activate
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid ${{ needs.get-patch-info.outputs.patch_id }} -desc '${{ needs.get-patch-info.outputs.check }} warning' -iid ${{ github.event.issue.number }} -state 'warning' -context '${{ needs.get-patch-info.outputs.context }}' -token ${{ secrets.PATCHWORK_API }}
 
 
@@ -148,13 +151,14 @@ jobs:
         with:
           free_up_space: false
 
-      - name: Bump pyopenssl and crypto
+      - name: Setup python env
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install requests
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+
 
       - name: Report Error
         run: |

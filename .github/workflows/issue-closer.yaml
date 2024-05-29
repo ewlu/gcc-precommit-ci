@@ -28,12 +28,13 @@ jobs:
           sudo apt install python-is-python3 -y
           sudo apt install zip -y
 
-      - name: Bump pyopenssl and crypto
+      - name: Setup python env
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
 
       - name: Close issues
         run: |
