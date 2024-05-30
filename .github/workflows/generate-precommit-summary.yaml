@@ -186,7 +186,7 @@ jobs:
       - name: Upload compare summaries
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.baseline_hash }}-summaries
+          name: ${{ inputs.patch_applied_gcchash }}-summaries
           path: |
             riscv-gnu-toolchain/summaries.zip
           retention-days: 90
@@ -194,7 +194,7 @@ jobs:
       - name: Upload current log failures
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.baseline_hash }}-current-logs
+          name: ${{ inputs.patch_applied_gcchash }}-current-logs
           path: |
             riscv-gnu-toolchain/current_logs.zip
           retention-days: 90
@@ -202,7 +202,7 @@ jobs:
       - name: Upload baseline results
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.baseline_hash }}-previous-logs
+          name: ${{ inputs.patch_applied_gcchash }}-previous-logs
           path: |
             riscv-gnu-toolchain/previous_logs.zip
           retention-days: 90
@@ -231,19 +231,19 @@ jobs:
       - name: Download summaries artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-summaries
+          name: ${{ inputs.patch_applied_gcchash }}-summaries
           path: ./riscv-gnu-toolchain
 
       - name: Download current logs artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-current-logs
+          name: ${{ inputs.patch_applied_gcchash }}-current-logs
           path: ./riscv-gnu-toolchain
 
       - name: Download previous logs artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.compare-artifacts.outputs.baseline_hash }}-previous-logs
+          name: ${{ inputs.patch_applied_gcchash }}-previous-logs
           path: ./riscv-gnu-toolchain
 
       - name: Download patches artifact
