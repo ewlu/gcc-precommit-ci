@@ -103,8 +103,8 @@ jobs:
           printf "Some targets are built as multilibs. If a build target ends with \`multilib\`, please refer to the table below to see all the targets within that multilib.\n" >> issue.md
           printf "|Target name|\`-march\` string|\n" >> issue.md
           printf "|-|-|\n" >> issue.md
-          printf "|newlib-rv64gc-lp64d-multilib|\`rv32gc-ilp32d\`, \`rv64gc-lp64d\`|\n" >> issue.md
-          printf "|newlib-rv64gcv-lp64d-multilib|\`rv64gcv-lp64d\`|\n" >> issue.md
+          # printf "|newlib-rv64gc-lp64d-multilib|\`rv32gc-ilp32d\`, \`rv64gc-lp64d\`|\n" >> issue.md
+          printf "|newlib-rv64gcv-lp64d-multilib|\`rv64gcv-lp64d\`, \`rv32gc-ilp32d\`, \`rv64gc-lp64d\`|\n" >> issue.md
           printf "|linux-rv64gcv-lp64d-multilib|\`rv32gcv-ilp32d\`, \`rv64gcv-lp64d\`|\n" >> issue.md
           printf "|linux-rv64gc_zba_zbb_zbc_zbs-lp64d-multilib|\`rv32gc_zba_zbb_zbc_zbs-ilp32d\`, \`rv64gc_zba_zbb_zbc_zbs-lp64d\`|\n" >> issue.md
           printf "## Target Information\n" >> issue.md
@@ -573,34 +573,34 @@ jobs:
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
     secrets: inherit
 
-  cmreg-sh: # Check Multilib Regressions. Short name so I can see the matrix string in github
-    needs: [download_patches, create-issue, apply, initialize-build-test-comments]
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: [newlib]
-        target: [rv64gc-lp64d] # Dummy placeholder. Actually runs rv32/rv64 multilib
-        multilib: [multilib]
-    uses: ./.github/workflows/test-regression.yaml
-    with:
-      patch_name: ${{ inputs.patch_name }}
-      mode: ${{ matrix.mode }}
-      target: ${{ matrix.target }}
-      baseline_hash: ${{ inputs.baseline_hash }}
-      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
-      multilib: ${{ matrix.multilib }}
-      build_only: ${{ needs.apply.outputs.build_only }}
-      issue_num: ${{ needs.create-issue.outputs.issue_num }}
-      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
-      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
-      run_on_self_hosted: true
-      tot_hash: ${{ inputs.tot_hash }}
-      additional_info: ${{ needs.create-issue.outputs.additional_info }}
-    secrets: inherit
+  # cmreg-sh: # Check Multilib Regressions. Short name so I can see the matrix string in github
+  #   needs: [download_patches, create-issue, apply, initialize-build-test-comments]
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       mode: [newlib]
+  #       target: [rv64gc-lp64d] # Dummy placeholder. Actually runs rv32/rv64 multilib
+  #       multilib: [multilib]
+  #   uses: ./.github/workflows/test-regression.yaml
+  #   with:
+  #     patch_name: ${{ inputs.patch_name }}
+  #     mode: ${{ matrix.mode }}
+  #     target: ${{ matrix.target }}
+  #     baseline_hash: ${{ inputs.baseline_hash }}
+  #     patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+  #     multilib: ${{ matrix.multilib }}
+  #     build_only: ${{ needs.apply.outputs.build_only }}
+  #     issue_num: ${{ needs.create-issue.outputs.issue_num }}
+  #     build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+  #     test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
+  #     run_on_self_hosted: true
+  #     tot_hash: ${{ inputs.tot_hash }}
+  #     additional_info: ${{ needs.create-issue.outputs.additional_info }}
+  #   secrets: inherit
 
   summarize:
     if: ${{ !cancelled() && needs.apply.outputs.apply_failure == 'false' }} # Generate github issues even when some (or all) targets fail to build. Ignore apply failures since there are no artifacts expected.
-    needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg-newlib, cmreg-bitmanip-sh, cmreg-sh, creg-sh]
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg-newlib, cmreg-bitmanip-sh, creg-sh]
     permissions:
       issues: write
     uses: ./.github/workflows/generate-precommit-summary.yaml
