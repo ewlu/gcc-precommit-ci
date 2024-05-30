@@ -2,12 +2,9 @@ name: Create-Cache
 
 on:
   schedule:
-    # Run at 1:07 on mondays and fridays 
+    # Run at 1:07 on sundays
     # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
-    - cron: 7 1 * * 1,5
-  pull_request:
-    branches:
-      - main
+    - cron: 7 1 * * 0
 
 jobs:
   init-submodules:
@@ -37,7 +34,7 @@ jobs:
             riscv-gnu-toolchain/glibc
             riscv-gnu-toolchain/newlib
             riscv-gnu-toolchain/qemu
-          key: submodules-archive-9 # Numbered archive to allow for easy transition when bumping submodules
+          key: submodules-archive-10 # Numbered archive to allow for easy transition when bumping submodules
 
       - name: Initalize submodules cache
         id: cache-init
@@ -98,7 +95,7 @@ jobs:
             riscv-gnu-toolchain/glibc
             riscv-gnu-toolchain/newlib
             riscv-gnu-toolchain/qemu
-          key: submodules-archive-9
+          key: submodules-archive-10
 
       - name: Make cache zip
         run: |
@@ -113,5 +110,5 @@ jobs:
           name: gcc-sources
           path: |
             riscv-gnu-toolchain/cache.zip
-          retention-days: 5
+          retention-days: 9
 
