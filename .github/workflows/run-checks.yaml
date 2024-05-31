@@ -27,18 +27,6 @@ jobs:
         with:
           free_up_space: false
 
-      - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
-
-      - name: Restore submodules
-        run: |
-          rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
-          unzip cache.zip
-          rm -rf cache.zip
-
       - name: Download patch urls artifact
         uses: actions/download-artifact@v3
         with:
@@ -51,20 +39,14 @@ jobs:
           name: patchworks_metadata_files
           path: ./riscv-gnu-toolchain
 
-      - name: Extract patch urls
+      - name: Extract downloaded files
         run: |
           unzip patch_files.zip
-
-      - name: Extract patchworks metadata
-        run: |
           unzip patchworks_metadata_files.zip
-
-      - name: Create patches dir
-        run: |
-          mkdir patches
 
       - name: Download patches from urls
         run: |
+          mkdir patches
           scripts/download_patches.sh -p ${{ inputs.patch_name }}
           mv patchworks_metadata/${{ inputs.patch_name }} patches/
 

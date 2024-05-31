@@ -67,36 +67,6 @@ jobs:
         run: |
           echo "workflow_dispatch=true" >> $GITHUB_OUTPUT
 
-      - name: Retrieve cache
-        id: retrieve-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            riscv-gnu-toolchain/.git
-            riscv-gnu-toolchain/binutils
-            riscv-gnu-toolchain/dejagnu
-            riscv-gnu-toolchain/gcc
-            riscv-gnu-toolchain/gdb
-            riscv-gnu-toolchain/glibc
-            riscv-gnu-toolchain/musl
-            riscv-gnu-toolchain/newlib
-            riscv-gnu-toolchain/pk
-            riscv-gnu-toolchain/qemu
-          key: submodules-archive-10
-
-      - name: Initalize gcc
-        if: steps.retrieve-cache.outputs.cache-hit != 'true'
-        id: gcc-cache
-        uses: ./.github/actions/common/init-and-pull-gcc
-        with:
-          init: true
-
-      - name: Checkout GCC
-        if: steps.gcc-cache.outcome == 'skipped'
-        uses: ./.github/actions/common/init-and-pull-gcc
-        with:
-          init: false
-
       - name: Create directories
         run: |
           mkdir current_logs
@@ -144,12 +114,11 @@ jobs:
             $PARSE_EXISTING_REPORT | tee "previous_logs/$FILE_NAME-multilib-report.log"
             rm -rf sum_files
           done
+          ls previous_logs
 
       - name: Separate multilib results
         run: |
           python scripts/separate_multilib_results.py -indir previous_logs -outdir previous_logs
-          mv previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv64gc-lp64d-${{ inputs.baseline_hash }}-multilib-report.log
-          mv previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-non-multilib-report.log previous_logs/gcc-newlib-rv32gc-ilp32d-${{ inputs.baseline_hash }}-multilib-report.log
           ls previous_logs
         continue-on-error: true
 
