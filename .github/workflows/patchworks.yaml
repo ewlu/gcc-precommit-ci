@@ -134,13 +134,72 @@ jobs:
     outputs:
       list_of_patch_names: ${{ steps.list_patches.outputs.patch_list }}
 
+
   init-submodules:
     needs: [fetch_patches]
     if: ${{ needs.fetch_patches.outputs.list_of_patch_names != '[]' }}
-    uses: ./.github/workflows/init-submodules.yaml
-    with:
-      baseline_hash: ${{ inputs.baseline_gcc_hash }}
-      tot_hash: ${{ inputs.tip_of_tree_hash }}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
+
+      - name: Determine baseline
+        id: baseline-hash
+        run: |
+          python ./scripts/get_baseline_hash.py -token ${{ secrets.GITHUB_TOKEN }}
+
+          if [ '${{ inputs.baseline_gcc_hash }}' == '' ] ; then export BASELINE_HASH=$(cat baseline.txt); else export BASELINE_HASH=${{ inputs.baseline_gcc_hash }}; fi
+          echo $BASELINE_HASH
+          echo "baseline_hash=$BASELINE_HASH" >> $GITHUB_OUTPUT
+
+      # https://stackoverflow.com/questions/24750215/getting-the-last-commit-hash-from-a-remote-repo-without-cloning
+      - name: Determine tip-of-tree hash
+        id: tot-hash
+        run: |
+          if [ '${{ inputs.tip_of_tree_hash }}' == '' ];
+          then
+            export TOT_HASH=$(git ls-remote https://gcc.gnu.org/git/gcc.git HEAD | awk '{ print $1 }')
+          else
+            export TOT_HASH=${{ inputs.tip_of_tree_hash }}
+          fi
+          echo $TOT_HASH
+          echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Determine tip-of-tree-hash retry
+        id: tot-retry
+        if: ${{ steps.tot-hash.outcome == 'failure' }}
+        run: |
+          # No need to see if inputs.tip_of_tree_hash is empty string since the only way we'll enter
+          # this step is if we get an error from the git ls-remote command
+          echo "retrying to get tip of tree hash due to git error"
+          sleep 60
+          export TOT_HASH=$(git ls-remote https://gcc.gnu.org/git/gcc.git HEAD | awk '{ print $1 }')
+          echo $TOT_HASH
+          echo "tot_hash=$TOT_HASH" >> $GITHUB_OUTPUT
+
+      - name: Effective tip-of-tree-hash
+        id: etot-hash
+        run: |
+          if [ '${{ steps.tot-hash.outputs.tot_hash }}' == '' ];
+          then
+            echo "tot_hash=${{ steps.tot-retry.outputs.tot_hash }}" >> $GITHUB_OUTPUT
+          else
+            echo "tot_hash=${{ steps.tot-hash.outputs.tot_hash }}" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      baseline_hash: ${{ steps.baseline-hash.outputs.baseline_hash }}
+      tot_hash: ${{ steps.etot-hash.outputs.tot_hash }}
+
 
   patch_matrix:
     needs: [fetch_patches, init-submodules]

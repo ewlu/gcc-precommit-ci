@@ -59,17 +59,34 @@ jobs:
         with:
           free_up_space: true
 
+      - name: Setup python env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
+        run: |
+          mkdir temp
+          source venv/bin/activate
+          python ./scripts/download_artifact.py -name gcc-sources -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
+          # using download_artifact.py the downloaded file is zipped twice for whatever reason
+          # remove the first layer of zip files
+          unzip gcc-sources
+          rm -rf gcc-sources
 
       - name: Restore submodules
         run: |
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
+
+      - name: Checkout gcc hash
+        uses: ./.github/actions/checkout-gcc-hash
+        with:
+          hash: ${{ inputs.baseline_hash }}
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
@@ -156,17 +173,34 @@ jobs:
         with:
           free_up_space: true
 
+      - name: Setup python env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
+        run: |
+          mkdir temp
+          source venv/bin/activate
+          python ./scripts/download_artifact.py -name gcc-sources -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
+          # using download_artifact.py the downloaded file is zipped twice for whatever reason
+          # remove the first layer of zip files
+          unzip gcc-sources
+          rm -rf gcc-sources
 
       - name: Restore submodules
         run: |
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
+
+      - name: Checkout gcc hash
+        uses: ./.github/actions/checkout-gcc-hash
+        with:
+          hash: ${{ inputs.baseline_hash }}
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
@@ -272,17 +306,34 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Setup python env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
+        run: |
+          mkdir temp
+          source venv/bin/activate
+          python ./scripts/download_artifact.py -name gcc-sources -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
+          # using download_artifact.py the downloaded file is zipped twice for whatever reason
+          # remove the first layer of zip files
+          unzip gcc-sources
+          rm -rf gcc-sources
 
       - name: Restore submodules
         run: |
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
+
+      - name: Checkout gcc hash
+        uses: ./.github/actions/checkout-gcc-hash
+        with:
+          hash: ${{ inputs.baseline_hash }}
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
@@ -366,17 +417,35 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Setup python env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -U pyopenssl cryptography
+          python -m pip install pygithub==1.59.1 requests
+
+
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v3
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
+        run: |
+          mkdir temp
+          source venv/bin/activate
+          python ./scripts/download_artifact.py -name gcc-sources -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./
+          # using download_artifact.py the downloaded file is zipped twice for whatever reason
+          # remove the first layer of zip files
+          unzip gcc-sources
+          rm -rf gcc-sources
 
       - name: Restore submodules
         run: |
           rm -rf .git binutils dejagnu gcc gdb glibc newlib qemu
           unzip cache.zip
           rm -rf cache.zip
+
+      - name: Checkout gcc hash
+        uses: ./.github/actions/checkout-gcc-hash
+        with:
+          hash: ${{ inputs.baseline_hash }}
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
