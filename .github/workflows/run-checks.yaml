@@ -254,6 +254,7 @@ jobs:
             echo "apply_baseline=false" >> $GITHUB_OUTPUT
           else
             echo "apply_baseline=true" >> $GITHUB_OUTPUT
+            git log --oneline ${{ inputs.baseline_hash }}^..HEAD > git_log_bl.txt 2>&1
           fi
         continue-on-error: true
 
@@ -272,6 +273,7 @@ jobs:
             echo "apply_tot=false" >> $GITHUB_OUTPUT
           else
             echo "apply_tot=true" >> $GITHUB_OUTPUT
+            git log --oneline ${{ inputs.tot_hash }}^..HEAD > git_log_tot.txt 2>&1
           fi
         continue-on-error: true
 
