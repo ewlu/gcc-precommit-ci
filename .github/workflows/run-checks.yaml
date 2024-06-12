@@ -12,6 +12,9 @@ on:
       tot_hash: # Tip of tree gcc hash
         required: true
         type: string
+      original_patch_issue_num:
+        required: false
+        type: string
 
 jobs:
   download_patches:
@@ -576,3 +579,24 @@ jobs:
       test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
       additional_info: ${{ needs.create-issue.outputs.additional_info }}
     secrets: inherit
+
+  link-staging-issue:
+    needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg, creg-newlib, cmreg, creg-sh, summarize]
+    if: ${{ !cancelled() && inputs.original_patch_issue_num != '' }}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Link Staging Issue to Original Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ needs.create-issue.outputs.issue_num }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Comparing against #${{ inputs.original_patch_issue_num }} for branch: ${{ github.event.pull_request.base.ref }}'
+            })
