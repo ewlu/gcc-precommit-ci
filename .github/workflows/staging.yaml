@@ -4,10 +4,42 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    branches:
+      - main
+    inputs:
+      timestamp:
+        description: 'Patch Timestamp (UTC)'
+        required: true
+      baseline_gcc_hash:
+        description: 'Baseline hash'
+        required: false
+      tip_of_tree_hash:
+        description: 'Trunk hash'
+        required: false
+      patch_id:
+        description: 'Patch id (patch series not supported)'
+        required: false
+      original_patch_issue_num:
+        description: 'Issue number to link against'
+        required: false
 
 jobs:
+  run-workflow-dispatch:
+    uses: ./.github/workflows/patchworks.yaml
+    if: ${{ inputs.timestamp != '' }}
+    permissions:
+      issues: write
+    with:
+      timestamp: ${{ inputs.timestamp }}
+      baseline_gcc_hash: ${{ inputs.baseline_gcc_hash }}
+      tip_of_tree_hash: ${{ inputs.tip_of_tree_hash }}
+      patch_id: ${{ inputs.patch_id }}
+      original_patch_issue_num: ${{ inputs.original_patch_issue_num }}
+
   get-patch-info:
     runs-on: [self-hosted, ping]
+    if: ${{ inputs.timestamp == '' }}
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -52,6 +84,7 @@ jobs:
 
   run-workflow:
     needs: [get-patch-info]
+    if: ${{ inputs.timestamp == '' }}
     uses: ./.github/workflows/patchworks.yaml
     permissions:
       issues: write

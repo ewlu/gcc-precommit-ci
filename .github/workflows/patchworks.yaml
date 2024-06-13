@@ -40,7 +40,7 @@ on:
         required: false
       original_patch_issue_num:
         description: 'Issue number to link against'
-        type: string
+        required: false
 
 jobs:
   fetch_patches:
