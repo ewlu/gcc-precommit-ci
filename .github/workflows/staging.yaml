@@ -25,7 +25,7 @@ on:
         required: false
 
 jobs:
-  run-workflow-dispatch:
+  manually-triggered-workflow-dispatch:
     uses: ./.github/workflows/patchworks.yaml
     if: ${{ inputs.timestamp != '' }}
     permissions:
