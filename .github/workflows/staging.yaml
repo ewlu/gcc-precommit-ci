@@ -41,12 +41,14 @@ jobs:
           echo "baseline_hash=$(cat baseline_hash.txt)" >> $GITHUB_OUTPUT
           echo "tot_hash=$(cat tot_hash.txt)" >> $GITHUB_OUTPUT
           echo "patch_id=$(cat patch_id.txt)" >> $GITHUB_OUTPUT
+          echo "issue_num=$(cat issue_num.txt)" >> $GITHUB_OUTPUT
 
     outputs:
       timestamp: ${{ steps.data.outputs.timestamp }}
       baseline_gcc_hash: ${{ steps.data.outputs.baseline_hash }}
       tip_of_tree_hash: ${{ steps.data.outputs.tot_hash }}
       patch_id: ${{ steps.data.outputs.patch_id }}
+      issue_num: ${{ steps.data.outputs.issue_num }}
 
   run-workflow:
     needs: [get-patch-info]
@@ -58,3 +60,4 @@ jobs:
       baseline_gcc_hash: ${{ needs.get-patch-info.outputs.baseline_gcc_hash }}
       tip_of_tree_hash: ${{ needs.get-patch-info.outputs.tip_of_tree_hash }}
       patch_id: ${{ needs.get-patch-info.outputs.patch_id }}
+      original_patch_issue_num: ${{ needs.get-patch-info.outputs.issue_num }}

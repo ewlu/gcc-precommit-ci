@@ -19,6 +19,9 @@ on:
       patch_id:
         description: 'Patch id (patch series not supported)'
         type: string
+      original_patch_issue_num:
+        description: 'Issue number to link against'
+        type: string
   workflow_dispatch:
     branches:
       - main
@@ -35,6 +38,9 @@ on:
       patch_id:
         description: 'Patch id (patch series not supported)'
         required: false
+      original_patch_issue_num:
+        description: 'Issue number to link against'
+        type: string
 
 jobs:
   fetch_patches:
@@ -155,4 +161,5 @@ jobs:
       patch_name: ${{ matrix.patch_name }}
       baseline_hash: ${{ needs.init-submodules.outputs.baseline_hash }}
       tot_hash: ${{ needs.init-submodules.outputs.tot_hash }}
+      original_patch_issue_num: ${{ inputs.original_patch_issue_num }}
     secrets: inherit
