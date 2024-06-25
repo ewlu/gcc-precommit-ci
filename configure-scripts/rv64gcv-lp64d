@@ -1,2 +1,3 @@
 #!/bin/bash
+# Used by self-hosted linux targets
 ../configure --prefix=$(pwd) --with-multilib-generator="rv32gcv-ilp32d--;rv64gcv-lp64d--"

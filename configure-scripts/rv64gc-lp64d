@@ -1,2 +1,3 @@
 #!/bin/bash
+# Used for single target build only warning comparisons
 ../configure --prefix=$(pwd) --with-multilib-generator="rv64gc-lp64d--"
