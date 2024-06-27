@@ -123,12 +123,18 @@ jobs:
         run: |
           mkdir -p patch_urls
           mkdir -p patchworks_metadata
-          python scripts/create_patches_files.py -file ./patch_numbers_to_run.txt
+          if [ -f ./patch_numbers_to_run.txt ]; then
+            python scripts/create_patches_files.py -file ./patch_numbers_to_run.txt
+          fi
 
       - name: List patch artifacts
         id: list_patches
         run: |
-          export PATCHLIST="$(cat artifact_names.txt)"
+          if [ -f ./artifact_names.txt ]; then
+            export PATCHLIST="$(cat artifact_names.txt)"
+          else
+            export PATCHLIST='[]'
+          fi
           echo "patch_list=$PATCHLIST" >> $GITHUB_OUTPUT
 
       - name: Make artifact zip
