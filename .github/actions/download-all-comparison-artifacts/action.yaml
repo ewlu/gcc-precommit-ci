@@ -11,19 +11,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Download linux rv64 vector multilib
-      uses: ./.github/actions/common/download-comparison-artifacts
-      with:
-        report-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log
-        binary-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib
-        github-token: ${{ inputs.token }}
-        repo: ${{ inputs.repo }}
-
     - name: Download linux rv64 bitmanip multilib
       uses: ./.github/actions/common/download-comparison-artifacts
       with:
         report-artifact-name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.gcchash }}-multilib-report.log
         binary-artifact-name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.gcchash }}-multilib
+        github-token: ${{ inputs.token }}
+        repo: ${{ inputs.repo }}
+
+    - name: Download linux rv64 vector multilib
+      uses: ./.github/actions/common/download-comparison-artifacts
+      with:
+        report-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib-report.log
+        binary-artifact-name: gcc-linux-rv64gcv-lp64d-${{ inputs.gcchash }}-multilib
         github-token: ${{ inputs.token }}
         repo: ${{ inputs.repo }}
 

@@ -151,6 +151,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Everything is moved onto self-hosted runners except for rv64gc build only
+      - name: Error if enter
+        run: |
+          exit 1
+
       - name: Setup env
         uses: ./.github/actions/common/setup-env
         with:
@@ -200,7 +205,7 @@ jobs:
           sudo apt install python3 -y
           sudo apt install python-is-python3 -y
 
-      # There is only one github target now which is rv32imc_zba_zbb_zbc_zbs-ilp32
+      # There is only one github target now which is rv64gc build only
       - name: Configure
         run: |
           mkdir build
@@ -295,7 +300,7 @@ jobs:
           sudo apt install python3 -y
           sudo apt install python-is-python3 -y
 
-      # There is only one github target now which is rv32imc_zba_zbb_zbc_zbs-ilp32
+      # There is only one github target now which is rv64gc build only
       - name: Configure
         run: |
           mkdir build
@@ -314,6 +319,7 @@ jobs:
           cp -r ../test/ .
 
       - name: Run Testsuite
+        if: ${{ inputs.build_only == 'false' }}
         uses: ./.github/actions/common/run-testsuite
         with:
           mode: ${{ inputs.mode }}
@@ -322,11 +328,13 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Build test complete report
+        if: ${{ inputs.build_only == 'false' }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
+        if: ${{ inputs.build_only == 'false' }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
