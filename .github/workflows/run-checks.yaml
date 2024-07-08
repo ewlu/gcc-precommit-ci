@@ -321,6 +321,16 @@ jobs:
           body-path: riscv-gnu-toolchain/trimmed_comment.md
           edit-mode: replace
 
+      - name: Output check apply-failure
+        id: apply-failure
+        run: |
+          if [[ "${{ steps.apply-baseline.outputs.apply_baseline }}" == "false" ]] && [[ "${{ steps.apply-tip-of-tree.outputs.apply_tot }}" == "false" ]];
+          then
+            echo "apply_failure=true" >> $GITHUB_OUTPUT
+          else
+            echo "apply_failure=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Report patch failed to apply to tip of tree
         if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' && github.workflow != 'Staging' }}
         run: |
@@ -334,13 +344,13 @@ jobs:
         continue-on-error: true
 
       - name: Report patch failed to apply anywhere
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' && github.workflow != 'Staging' }}
+        if: ${{ steps.apply-failure.outputs.apply_failure == 'true' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }}) -desc 'Patch failed to apply' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ needs.create-issue.outputs.apply_comment_id }}' -state 'fail' -context 'apply-patch' -token ${{ secrets.PATCHWORK_API }}
         continue-on-error: true
 
       - name: Add apply-failure label if patch failed to apply anywhere
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'false' }}
+        if: ${{ steps.apply-failure.outputs.apply_failure == 'true' }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -353,7 +363,7 @@ jobs:
 
       - name: Output the hash after the patch has been applied
         id: new-gcc-hash
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'true' || steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
+        if: ${{ steps.apply-failure.outputs.apply_failure == 'false' }}
         run: |
           cd gcc
           git reset --hard ${{ inputs.tot_hash }}
@@ -369,6 +379,7 @@ jobs:
       early_exit: ${{ steps.early-exit.outputs.early_exit }}
       build_only: ${{ steps.build-only.outputs.build_only }}
       patch_applied_gcchash: ${{ steps.new-gcc-hash.outputs.patch_applied_gcchash }}
+      apply_failure: ${{ steps.apply-failure.outputs.apply_failure }}
 
 
   ################################################################################
@@ -563,7 +574,7 @@ jobs:
     secrets: inherit
 
   summarize:
-    if: "!cancelled()" # Generate github issues even when some (or all) targets fail to build
+    if: ${{ !cancelled() && needs.apply.outputs.apply_failure == 'false' }} # Generate github issues even when some (or all) targets fail to build
     needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg, creg-newlib, cmreg, creg-sh]
     permissions:
       issues: write
