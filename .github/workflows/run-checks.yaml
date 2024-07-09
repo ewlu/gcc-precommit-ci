@@ -574,7 +574,7 @@ jobs:
     secrets: inherit
 
   summarize:
-    if: ${{ !cancelled() && needs.apply.outputs.apply_failure == 'false' }} # Generate github issues even when some (or all) targets fail to build
+    if: ${{ !cancelled() && needs.apply.outputs.apply_failure == 'false' }} # Generate github issues even when some (or all) targets fail to build. Ignore apply failures since there are no artifacts expected.
     needs: [download_patches, create-issue, apply, initialize-build-test-comments, creg, creg-newlib, cmreg, creg-sh]
     permissions:
       issues: write
