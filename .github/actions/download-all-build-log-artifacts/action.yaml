@@ -1,0 +1,41 @@
+name: "Download All Build Log Artifacts"
+description: "Downloads all the build log artifacts for a given hash. Only use this action if the given gcchash is not built in the current run"
+inputs:
+  gcchash:
+    required: true
+    description: 'GCC Hash of the artifact'
+  github-token:
+    required: true
+  output-dir:
+    required: true
+    description: 'Absolute Path to the artifact directory'
+
+runs:
+  using: "composite"
+  steps:
+    - name: prereqs
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.output-dir }}
+
+    - name: Download linux rv64gc  non-multilib
+      uses: ./.github/actions/common/download-build-log-artifact
+      with:
+        build-artifact-name: linux-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-build-log
+        github-token: ${{ inputs.github-token }}
+        output-dir: ${{ inputs.output-dir }}
+
+    - name: Download newlib rv64gc non-multilib
+      uses: ./.github/actions/common/download-build-log-artifact
+      with:
+        build-artifact-name: newlib-rv64gc-lp64d-${{ inputs.gcchash }}-non-multilib-build-log
+        github-token: ${{ inputs.github-token }}
+        output-dir: ${{ inputs.output-dir }}
+
+    #TODO: Support Multilib. Restriction: https://github.com/ewlu/gcc-precommit-ci/pull/1919#discussion_r1686874053
+
+    - name: Print downloaded artifacts
+      shell: bash
+      run: |
+        cd riscv-gnu-toolchain
+        ls ${{ inputs.output-dir }}
