@@ -1,0 +1,6 @@
+#
+# xgcc: fatal error: Cannot find suitable multilib set for '-march=rv32imafdc_zicsr_zifencei_zaamo_zalrsc'/'-mabi=ilp32d'
+# When building newlib multilib target, we test rv32gc which would cause this test to pass on precommit
+# but it will fail on postcommit.
+#
+FAIL: gcc.target/riscv/pr113095.c
