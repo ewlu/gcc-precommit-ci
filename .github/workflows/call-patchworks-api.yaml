@@ -57,8 +57,7 @@ jobs:
 
       - name: Extract patch
         run: |
-          unzip ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches
-          unzip ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches.zip
+          unzip -o ${{ steps.patch-name.outputs.patch_name }}-downloaded-patches.zip
 
       - name: Get patch id
         id: patch-id
