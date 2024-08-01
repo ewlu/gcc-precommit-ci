@@ -282,9 +282,13 @@ jobs:
 
       - name: Check build only
         id: build-only
-        if: ${{ steps.apply-baseline.outputs.apply_baseline == 'false' && steps.apply-tip-of-tree.outputs.apply_tot == 'true' }}
         run: |
-          echo "build_only=true" >> $GITHUB_OUTPUT
+          if [ '${{ steps.apply-baseline.outputs.apply_baseline }}' == 'false' ] &&
+             [ '${{ steps.apply-tip-of-tree.outputs.apply_tot }}' == 'true' ]; then
+            echo "build_only=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_only=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check early exit
         id: early-exit
