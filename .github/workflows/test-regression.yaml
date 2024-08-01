@@ -144,7 +144,7 @@ jobs:
     environment: production
     needs: [build]
     # Skip linux multilib
-    if: ${{ inputs.build_only != 'true' && inputs.run_on_self_hosted != 'true' }}
+    if: ${{ inputs.build_only == 'false' && inputs.run_on_self_hosted != 'true' }}
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -465,13 +465,13 @@ jobs:
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
       - name: Build test starting report
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only == 'false' }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Pending' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test pending report comment
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only == 'false' }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
@@ -479,7 +479,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report testing
-        if: ${{ inputs.build_only != 'true' && github.workflow != 'Staging' }}
+        if: ${{ inputs.build_only == 'false' && github.workflow != 'Staging' }}
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing started' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.test_comment_id }}' -state 'pending' -context 'test' -token '${{ secrets.PATCHWORK_API }}'
         continue-on-error: true
@@ -490,7 +490,7 @@ jobs:
           cp -r ../test/ .
 
       - name: Run Testsuite
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only == 'false' }}
         uses: ./.github/actions/common/run-testsuite
         with:
           mode: ${{ inputs.mode }}
@@ -499,13 +499,13 @@ jobs:
           multilib: ${{ inputs.multilib }}
 
       - name: Build test complete report
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only == 'false' }}
         run: |
           python scripts/update_issue_status.py -token ${{ secrets.GITHUB_TOKEN }} -state 'Complete. Full report will be displayed once all targets are complete' -comment ${{ inputs.test_comment_id }} -target ${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.multilib }} -check 'Testsuite' -repo ewlu/gcc-precommit-ci -baseline ${{ inputs.baseline_hash }}
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update test complete report comment
-        if: ${{ inputs.build_only != 'true' }}
+        if: ${{ inputs.build_only == 'false' }}
         uses: ./.github/actions/update-comment
         with:
           comment_id: ${{ inputs.test_comment_id }}
