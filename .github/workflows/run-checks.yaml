@@ -479,7 +479,7 @@ jobs:
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
-      build_only: 'true'
+      build_only: 'run_warnings'
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
       build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}

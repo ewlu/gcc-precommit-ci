@@ -43,7 +43,7 @@ runs:
         run: |
           cd gcc
           git checkout ${{ inputs.tot_hash }}
-          
+
       - name: Apply patches
         shell: bash
         working-directory: riscv-gnu-toolchain
