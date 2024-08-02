@@ -280,7 +280,7 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Check build only
+      - name: Set build only
         id: build-only
         run: |
           if [ '${{ steps.apply-baseline.outputs.apply_baseline }}' == 'false' ] &&
@@ -459,9 +459,21 @@ jobs:
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Testing skipped' -iid '${{ needs.create-issue.outputs.issue_num }}#issuecomment-${{ steps.test-comment.outputs.comment-id }}' -state 'warning' -context 'test' -token '${{ secrets.PATCHWORK_API }}' -repo ewlu/gcc-precommit-ci
         continue-on-error: true
 
+        # If the patch does not apply to baseline, we need to run the build warning
+        # comparisons against tip of tree and not the baseline hash.
+      - name: Update build only value for warning comparisons
+        id: run-build-warning
+        run: |
+          if [ "${{ inputs.build_only }}" == "true" ]; then
+            echo "build_warning=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_warning=run_warning" >> $GITHUB_OUTPUT
+          fi
+
     outputs:
       build_comment_id: ${{ steps.build-comment.outputs.comment-id }}
       test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
+      build_warning: ${{ steps.run-build-warning.outputs.build_warning }}
 
   # Single target build-only for build warning comparisons
   creg: # Check Regressions. Short name so I can see the matrix string in github
@@ -483,7 +495,7 @@ jobs:
       baseline_hash: ${{ inputs.baseline_hash }}
       patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
       multilib: ${{ matrix.multilib }}
-      build_only: 'run_warnings'
+      build_only: ${{ needs.initialize-build-test-comments.outputs.build_warning }}
       issue_num: ${{ needs.create-issue.outputs.issue_num }}
       build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
       test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
