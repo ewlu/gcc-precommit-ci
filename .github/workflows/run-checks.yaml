@@ -112,7 +112,7 @@ jobs:
           printf "|Bitmanip|\`gc_zba_zbb_zbc_zbs\`|\n" >> issue.md
           printf "## Notes\n" >> issue.md
           echo "Testsuite results use a more lenient allowlist to reduce error reporting with flakey tests. Please take a look at the current [allowlist](https://github.com/ewlu/gcc-precommit-ci/tree/main/test/allowlist)." >> issue.md
-          echo "Results come from a [sum file comparator](https://github.com/patrick-rivos/riscv-gnu-toolchain/blob/a0a8cabf8ca71bdfbb41e23ab599af9528af772c/scripts/compare_testsuite_log.py). Each patch is applied to a well known, non-broken baseline taken from our" >> issue.md
+          echo "Results come from a [sum file comparator](https://github.com/patrick-rivos/riscv-gnu-toolchain/blob/a0a8cabf8ca71bdfbb41e23ab599af9528af772c/scripts/compare_testsuite_log.py). Each patch is applied to a well known, valid baseline (marked with a 'valid-baseline' label) taken from our" >> issue.md
           echo "gcc postcommit framework ([here](https://github.com/patrick-rivos/gcc-postcommit-ci/issues)) which runs the full gcc testsuite every 6 hours." >> issue.md
           echo "If you have any questions or encounter any issues which may seem like false-positives, please contact us at patchworks-ci@rivosinc.com" >> issue.md
           cat issue.md
