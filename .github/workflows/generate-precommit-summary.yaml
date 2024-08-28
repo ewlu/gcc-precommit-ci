@@ -359,6 +359,19 @@ jobs:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain/patches
 
+      - name: Build Warnings Artifact download setup
+        id: build-warning-artifact-download-setup
+        run: |
+          echo "patch_hash=$(tail -n 1 patches/${{ inputs.patch_name }})" >> $GITHUB_OUTPUT
+
+      - name: Download build warnings comparison artifact
+        id: download-build-warning-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.build-warning-artifact-download-setup.outputs.patch_hash }}-new-build-warnings
+          path: ./riscv-gnu-toolchain
+        continue-on-error: true
+
       - name: Print API usage info
         run: |
           curl \
@@ -420,6 +433,43 @@ jobs:
           comment-id: ${{ inputs.test_comment_id }}
           body-path: riscv-gnu-toolchain/trimmed_comment.md
           edit-mode: replace
+
+      - name: Trim build warnings # reduce the number of lines in final comment so github always create comment
+        if: ${{ steps.download-build-warning-artifact.outcome == 'success' }}
+        run: |
+          BUILD_WARNINGS_FILE=new_build_warnings.md
+          echo "BETA: This feature is unstable and may produce false-positives. If you notice a warning that looks like a false-positive please contact us at patchworks-ci@rivosinc.com" > trimmed_build_warnings.md
+          head -c 65000 $BUILD_WARNINGS_FILE >> trimmed_build_warnings.md
+          if [ $(stat -c%s $BUILD_WARNINGS_FILE) -gt 65000 ]; then
+            printf "\nBuild warnings comment has been trimmed. Check the following Gist URL for full list.\n" >> trimmed_build_warnings.md
+            FILE_SIZE=$(stat -c%s "$BUILD_WARNINGS_FILE")
+            ONE_MB_IN_BYTES=1048000
+            if [ "$FILE_SIZE" -gt "$ONE_MB_IN_BYTES" ]; then
+              printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." > trimmed_new_build_warnings_gist.md
+            fi
+            head -c $ONE_MB_IN_BYTES "$BUILD_WARNINGS_FILE" >> trimmed_new_build_warnings_gist.md
+            if [ "$FILE_SIZE" -gt "$ONE_MB_IN_BYTES" ]; then
+              printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." >> trimmed_new_build_warnings_gist.md
+            fi
+          fi
+          cat trimmed_build_warnings.md
+
+      - name: Create New Build Warnings Gist
+        run: |
+          if [ -e "trimmed_new_build_warnings_gist.md" ]; then
+            python3 -m pip install pygithub requests pyopenssl --upgrade
+            python3 ./scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input trimmed_new_build_warnings_gist.md --output build_warning_gist_url.txt --title ${{ steps.create-issue.outputs.issue-number }}_${{ inputs.issue_hash_prefix }}_${{ inputs.gcchash }}_build_warnings.md
+            printf "Gist URL: $(cat build_warning_gist_url.txt)" >> trimmed_build_warnings.md
+          fi
+        continue-on-error: true
+
+      - name: Create build warnings comment
+        uses: peter-evans/create-or-update-comment@v4
+        if: ${{ steps.download-build-warning-artifact.outcome == 'success' }}
+        with:
+          issue-number: ${{ inputs.issue_num }}
+          body-path: riscv-gnu-toolchain/trimmed_build_warnings.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Output issue labels
         id: issue-labels
