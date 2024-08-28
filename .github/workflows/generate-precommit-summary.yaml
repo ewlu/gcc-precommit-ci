@@ -298,10 +298,31 @@ jobs:
 
       - name: Trim comment length # reduce the number of lines in final comment so github always creates comment
         run: |
+          # Max comment length is 65536. Allocate 1536 for extra statements 
           head -c 64000 comment.md > trimmed_comment.md
-          if [ $(cat trimmed_comment.md | wc -l) -ne $(cat comment.md | wc -l) ]; then printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; fi
+          FILE_SIZE=$(stat -c%s "comment.md")
+          if [ $FILE_SIZE -gt 64000 ]; then 
+            printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; 
+            # Max gist bytes are 1048576. Allocate 576 for extra statements
+            ONE_MB_IN_BYTES=1048000
+            if [ $FILE_SIZE -gt $ONE_MB_IN_BYTES ]; then
+              printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." > trimmed_comment_gist.md
+            fi
+            head -c $ONE_MB_IN_BYTES "comment.md" >> trimmed_comment_gist.md
+            if [ $FILE_SIZE -gt $ONE_MB_IN_BYTES ]; then
+              printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." >> trimmed_comment_gist.md
+            fi
+          fi
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
           cat trimmed_comment.md
+
+      - name: Create Unresolved Errors Comment Gist
+        run: |
+          if [ -e "trimmed_comment_gist.md" ]; then
+            python3 ./scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input trimmed_comment_gist.md --output comment_gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.patch_applied_gcchash }}_summary.md
+            printf "\nGist URL: $(cat comment_gist_url.txt)" >> trimmed_comment.md
+          fi
+        continue-on-error: true
 
       - name: Update test report comment
         uses: peter-evans/create-or-update-comment@v4
