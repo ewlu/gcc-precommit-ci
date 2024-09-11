@@ -18,6 +18,15 @@ jobs:
         uses: ./.github/actions/common/setup-env
         with:
           free_up_space: false
+          
+      - name: Bump pyopenssl and crypto
+        run: |
+          sudo apt remove python3-pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          sudo python3 get-pip.py
+          pip install -U pyopenssl cryptography
+          pip install pygithub==1.59.1 requests
+
       # Compare build warnings
       - name: Download patches artifact
         run: |
