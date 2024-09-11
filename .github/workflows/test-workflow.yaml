@@ -1,0 +1,31 @@
+name: test-download-patch
+on:
+  push:
+    branches:
+      - kevinl/test_patches_download
+
+jobs:
+  compare-artifacts:
+    runs-on: ubuntu-20.04
+    environment: production
+    defaults:
+      run:
+        working-directory: riscv-gnu-toolchain
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
+      # Compare build warnings
+      - name: Download patches artifact
+        run: |
+          mkdir temp
+          python ./scripts/download_artifact.py -name 38107-RISCV_Also_lower_SLP_grouped_loads_with_just_one_consumer-1-downloaded-patches -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp -repo ewlu/gcc-precommit-ci
+          ls temp
+          unzip temp/38107-RISCV_Also_lower_SLP_grouped_loads_with_just_one_consumer-1-downloaded-patches
+
+      - name: Extract patches
+        run: |
+          unzip 38107-RISCV_Also_lower_SLP_grouped_loads_with_just_one_consumer-1-downloaded-patches
