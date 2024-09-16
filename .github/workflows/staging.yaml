@@ -85,6 +85,7 @@ jobs:
   run-workflow:
     needs: [get-patch-info]
     if: ${{ inputs.timestamp == '' }}
+    secrets: inherit
     uses: ./.github/workflows/patchworks.yaml
     permissions:
       issues: write
