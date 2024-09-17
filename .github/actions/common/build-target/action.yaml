@@ -57,20 +57,15 @@ runs:
           (make -j 32 ${{ inputs.mode }}) 2> >(tee ${{ inputs.build_log_name }}-stderr.log) > >(tee ${{ inputs.build_log_name }}-stdout.log) | tee ${{ inputs.build_log_name }}.log 
           set +o pipefail
 
-      - name: Zip build log
-        if: ${{ always() }}
-        shell: bash
-        working-directory: riscv-gnu-toolchain
-        run: |
-          zip ${{ inputs.build_log_name }}.zip build/${{ inputs.build_log_name }}.log build/${{ inputs.build_log_name }}-stdout.log build/${{ inputs.build_log_name }}-stderr.log
-
       - name: Upload build log
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.build_log_name }}
           path: |
-            riscv-gnu-toolchain/${{ inputs.build_log_name }}.zip
+            riscv-gnu-toolchain/build/${{ inputs.build_log_name }}.log
+            riscv-gnu-toolchain/build/${{ inputs.build_log_name }}-stdout.log
+            riscv-gnu-toolchain/build/${{ inputs.build_log_name }}-stderr.log
           retention-days: 90
 
       - name: Zip binaries
