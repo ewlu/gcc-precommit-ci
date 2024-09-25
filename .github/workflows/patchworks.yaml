@@ -115,27 +115,22 @@ jobs:
           export PATCHLIST="$(cat artifact_names.txt)"
           echo "patch_list=$PATCHLIST" >> $GITHUB_OUTPUT
 
-      - name: Make artifact zip
-        run: |
-          zip -r patch_files.zip patch_urls
-          zip -r patchworks_metadata_files.zip patchworks_metadata
-
-      - name: Upload patch urls zip
+      - name: Upload patch urls
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
         uses: actions/upload-artifact@v4
         with:
           name: patch_urls
           path: |
-            riscv-gnu-toolchain/patch_files.zip
+            riscv-gnu-toolchain/patch_urls
           retention-days: 90
 
-      - name: Upload patchworks metadata zip
+      - name: Upload patchworks metadata
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
         uses: actions/upload-artifact@v4
         with:
           name: patchworks_metadata_files
           path: |
-            riscv-gnu-toolchain/patchworks_metadata_files.zip
+            riscv-gnu-toolchain/patchworks_metadata
           retention-days: 90
 
     outputs:
