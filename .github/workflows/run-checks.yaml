@@ -34,18 +34,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: patch_urls
-          path: ./riscv-gnu-toolchain
+          path: ./riscv-gnu-toolchain/patch_urls
 
       - name: Download patchworks urls artifact
         uses: actions/download-artifact@v4
         with:
           name: patchworks_metadata_files
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract downloaded files
-        run: |
-          unzip patch_files.zip
-          unzip patchworks_metadata_files.zip
+          path: ./riscv-gnu-toolchain/patchworks_metadata
 
       - name: Download patches from urls
         run: |
