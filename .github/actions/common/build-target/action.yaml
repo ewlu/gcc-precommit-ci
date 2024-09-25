@@ -1,4 +1,4 @@
-name: "Build target" 
+name: "Build target"
 description: "Builds GCC targets"
 inputs:
   multilib_target_string:
@@ -54,7 +54,7 @@ runs:
         run: |
           cd build
           set -o pipefail
-          (make -j 32 ${{ inputs.mode }}) 2> >(tee ${{ inputs.build_log_name }}-stderr.log) > >(tee ${{ inputs.build_log_name }}-stdout.log) | tee ${{ inputs.build_log_name }}.log 
+          (make -j 32 ${{ inputs.mode }}) 2> >(tee ${{ inputs.build_log_name }}-stderr.log) > >(tee ${{ inputs.build_log_name }}-stdout.log) | tee ${{ inputs.build_log_name }}.log
           set +o pipefail
 
       - name: Upload build log
@@ -68,18 +68,12 @@ runs:
             riscv-gnu-toolchain/build/${{ inputs.build_log_name }}-stderr.log
           retention-days: 90
 
-      - name: Zip binaries
-        shell: bash
-        working-directory: riscv-gnu-toolchain
-        run: |
-          zip -r gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}.zip build/bin
-
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}
           path: |
-            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}.zip
+            riscv-gnu-toolchain/build/bin
           retention-days: 5
 
       # Running testsuite (stamps/check-gcc-*) only uses stage2 & assorted folders

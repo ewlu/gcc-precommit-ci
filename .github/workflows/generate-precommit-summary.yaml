@@ -177,18 +177,12 @@ jobs:
           rm current_logs/failed_testsuite.txt
         continue-on-error: true
 
-      - name: Make artifact zips
-        run: |
-          zip -r summaries.zip summaries
-          zip -r current_logs.zip current_logs
-          zip -r previous_logs.zip previous_logs
-
       - name: Upload compare summaries
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.patch_applied_gcchash }}-summaries
           path: |
-            riscv-gnu-toolchain/summaries.zip
+            riscv-gnu-toolchain/summaries
           retention-days: 90
 
       - name: Upload current log failures
@@ -196,7 +190,7 @@ jobs:
         with:
           name: ${{ inputs.patch_applied_gcchash }}-current-logs
           path: |
-            riscv-gnu-toolchain/current_logs.zip
+            riscv-gnu-toolchain/current_logs
           retention-days: 90
 
       - name: Upload baseline results
@@ -204,7 +198,7 @@ jobs:
         with:
           name: ${{ inputs.patch_applied_gcchash }}-previous-logs
           path: |
-            riscv-gnu-toolchain/previous_logs.zip
+            riscv-gnu-toolchain/previous_logs
           retention-days: 90
 
     outputs:
@@ -298,11 +292,11 @@ jobs:
 
       - name: Trim comment length # reduce the number of lines in final comment so github always creates comment
         run: |
-          # Max comment length is 65536. Allocate 1536 for extra statements 
+          # Max comment length is 65536. Allocate 1536 for extra statements
           head -c 64000 comment.md > trimmed_comment.md
           FILE_SIZE=$(stat -c%s "comment.md")
-          if [ $FILE_SIZE -gt 64000 ]; then 
-            printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md; 
+          if [ $FILE_SIZE -gt 64000 ]; then
+            printf "\n\`\`\`\nComment text has been trimmed. Please check logs for the untrimmed comment." >> trimmed_comment.md;
             # Max gist bytes are 1048576. Allocate 576 for extra statements
             ONE_MB_IN_BYTES=1048000
             if [ $FILE_SIZE -gt $ONE_MB_IN_BYTES ]; then

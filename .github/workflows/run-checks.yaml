@@ -53,16 +53,12 @@ jobs:
           scripts/download_patches.sh -p ${{ inputs.patch_name }}
           mv patchworks_metadata/${{ inputs.patch_name }} patches/
 
-      - name: Zip patches
-        run: |
-          zip -r ${{ inputs.patch_name }}-downloaded-patches.zip patches
-
       - name: Upload patches artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: |
-            riscv-gnu-toolchain/${{ inputs.patch_name }}-downloaded-patches.zip
+            riscv-gnu-toolchain/patches
           retention-days: 90
 
   create-issue:

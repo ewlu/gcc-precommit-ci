@@ -53,14 +53,13 @@ jobs:
             echo "start_date=$START_DATE" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build success artifact 
+      - name: Build success artifact
         if: ${{ steps.continue.outputs.start_date == '' }}
         run: |
           TZ=UTC date -d "$(date -d 'yesterday' '+%Y-%m-%d')" "+%Y-%m-%dT%H:%M:%S" > yesterday_date.txt
           YESTERDAY=$(cat yesterday_date.txt)
           # Get yestderay noon
           TZ=UTC date -d "@$((($(TZ=UTC date -d $YESTERDAY +%s) + 43200)))" '+%Y-%m-%dT%H:%M:%S' > end_date.txt
-          zip end_date.zip end_date.txt
 
       - name: Upload success artifact
         if: ${{ steps.continue.outputs.start_date == '' }}
@@ -68,7 +67,7 @@ jobs:
         with:
           name: downtime_runner_success
           path: |
-            riscv-gnu-toolchain/end_date.zip
+            riscv-gnu-toolchain/end_date.txt
           retention-days: 90
 
     outputs:
@@ -137,27 +136,22 @@ jobs:
           fi
           echo "patch_list=$PATCHLIST" >> $GITHUB_OUTPUT
 
-      - name: Make artifact zip
-        run: |
-          zip -r patch_files.zip patch_urls
-          zip -r patchworks_metadata_files.zip patchworks_metadata
-
-      - name: Upload patch urls zip
+      - name: Upload patch urls
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
         uses: actions/upload-artifact@v4
         with:
           name: patch_urls
           path: |
-            riscv-gnu-toolchain/patch_files.zip
+            riscv-gnu-toolchain/patch_urls
           retention-days: 90
 
-      - name: Upload patchworks metadata zip
+      - name: Upload patchworks metadata
         if: ${{ steps.list_patches.outputs.patch_list != '[]' }}
         uses: actions/upload-artifact@v4
         with:
           name: patchworks_metadata_files
           path: |
-            riscv-gnu-toolchain/patchworks_metadata_files.zip
+            riscv-gnu-toolchain/patchworks_metadata
           retention-days: 90
 
     outputs:
