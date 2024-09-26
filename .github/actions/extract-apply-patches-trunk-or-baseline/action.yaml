@@ -21,13 +21,7 @@ runs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        shell: bash
-        working-directory: riscv-gnu-toolchain
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+          path: ./riscv-gnu-toolchain/patches
 
       - name: Checkout gcc hash
         shell: bash

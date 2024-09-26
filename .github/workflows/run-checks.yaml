@@ -76,11 +76,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+          path: ./riscv-gnu-toolchain/patches
 
       - name: Build initial issue
         run: |
@@ -219,11 +215,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+          path: ./riscv-gnu-toolchain/patches
 
       - name: Checkout gcc hash
         run: |
@@ -400,11 +392,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+          path: ./riscv-gnu-toolchain/patches
 
       - name: Create build pending comment
         run: |

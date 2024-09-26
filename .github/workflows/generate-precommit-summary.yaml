@@ -257,11 +257,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.patch_name }}-downloaded-patches
-          path: ./riscv-gnu-toolchain
-
-      - name: Extract patches
-        run: |
-          unzip ${{ inputs.patch_name }}-downloaded-patches.zip
+          path: ./riscv-gnu-toolchain/patches
 
       - name: Print API usage info
         run: |
