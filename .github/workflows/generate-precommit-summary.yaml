@@ -73,13 +73,15 @@ jobs:
           mkdir temp
           mkdir summaries
 
-      - name: Bump pyopenssl and crypto
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install pygithub==1.59.1 requests
+          pip install -r ../requirements.txt
 
       - name: Download baseline sum files
         run: |
@@ -222,6 +224,16 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r ../requirements.txt
+
       - name: Download summaries artifact
         uses: actions/download-artifact@v4
         with:
@@ -243,10 +255,6 @@ jobs:
       - name: Download patches artifact
         if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}
         run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography pygithub==1.59.1 requests
           mkdir temp
           python ./scripts/download_artifact.py -name ${{ inputs.patch_name }}-downloaded-patches -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp -repo ewlu/gcc-precommit-ci
           ls temp

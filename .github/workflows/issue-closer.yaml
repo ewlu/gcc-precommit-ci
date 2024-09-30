@@ -22,20 +22,20 @@ jobs:
         with:
           free_up_space: false
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r ../requirements.txt
+
       - name: Install dependencies
         run: |
-          sudo apt install python3 -y
-          sudo apt install python-is-python3 -y
           sudo apt install zip -y
-
-      - name: Bump pyopenssl and crypto
-        run: |
-          sudo apt remove python3-pip
-          wget https://bootstrap.pypa.io/get-pip.py
-          sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
 
       - name: Close issues
         run: |
           python scripts/close_old_issues.py -token ${{ secrets.GITHUB_TOKEN }}
-
