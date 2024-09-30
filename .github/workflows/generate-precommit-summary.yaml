@@ -78,8 +78,7 @@ jobs:
           sudo apt remove python3-pip
           wget https://bootstrap.pypa.io/get-pip.py
           sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install pygithub==1.59.1 requests
+          pip install -U pyopenssl cryptography pygithub requests
 
       - name: Download baseline sum files
         run: |
@@ -245,8 +244,7 @@ jobs:
           sudo apt remove python3-pip
           wget https://bootstrap.pypa.io/get-pip.py
           sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
-          pip install pygithub==1.59.1 requests
+          pip install -U pyopenssl cryptography pygithub requests
 
       - name: Download patches artifact
         if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}

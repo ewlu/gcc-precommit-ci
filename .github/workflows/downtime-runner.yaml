@@ -31,11 +31,10 @@ jobs:
           sudo apt remove python3-pip
           wget https://bootstrap.pypa.io/get-pip.py
           sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography
+          pip install -U pyopenssl cryptography requests pygithub
 
       - name: Download last successful run artifact
         run: |
-          pip install pygithub requests
           mkdir result
           mkdir temp
           python ./scripts/download_artifact.py -name "downtime_runner_success" -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir result || true
