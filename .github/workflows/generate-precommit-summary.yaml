@@ -240,13 +240,17 @@ jobs:
           name: ${{ inputs.patch_applied_gcchash }}-previous-logs
           path: ./riscv-gnu-toolchain/previous_logs
 
-      - name: Download patches artifact
-        if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}
+      - name: Bump pyopenssl and crypto
         run: |
           sudo apt remove python3-pip
           wget https://bootstrap.pypa.io/get-pip.py
           sudo python3 get-pip.py
-          pip install -U pyopenssl cryptography pygithub==1.59.1 requests
+          pip install -U pyopenssl cryptography
+          pip install pygithub==1.59.1 requests
+
+      - name: Download patches artifact
+        if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}
+        run: |
           mkdir temp
           python ./scripts/download_artifact.py -name ${{ inputs.patch_name }}-downloaded-patches -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }} -outdir ./temp -repo ewlu/gcc-precommit-ci
           ls temp
