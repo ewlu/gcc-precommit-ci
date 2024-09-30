@@ -511,4 +511,3 @@ jobs:
           comment_id: ${{ inputs.test_comment_id }}
           file_path: riscv-gnu-toolchain/comment.md
           token: ${{ secrets.GITHUB_TOKEN }}
-

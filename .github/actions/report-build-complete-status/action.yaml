@@ -93,4 +93,3 @@ runs:
         run: |
           python scripts/post_check_to_patchworks.py -event ${{ github.event_name }} -repo ewlu/gcc-precommit-ci -pid $(tail -n 1 patches/${{ inputs.patch_name }})  -desc 'Build passed' -iid '${{ inputs.issue_num }}#issuecomment-${{ inputs.build_comment_id }}' -state 'success' -context 'build--${{ inputs.target }}' -token '${{ inputs.patchwork_token }}'
         continue-on-error: true
-

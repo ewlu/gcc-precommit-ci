@@ -48,4 +48,3 @@ runs:
           cd gcc
           git checkout master
           git pull
-
