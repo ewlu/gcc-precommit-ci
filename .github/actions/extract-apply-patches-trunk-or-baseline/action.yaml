@@ -47,4 +47,3 @@ runs:
           git config user.email "<>"
           git am ../patches/*.patch --whitespace=fix --3way --empty=drop
           echo $(git rev-parse HEAD)
-
