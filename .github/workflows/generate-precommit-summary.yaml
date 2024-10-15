@@ -237,19 +237,21 @@ jobs:
       #
       # begin downloading current workflow build logs
       #
-      - name: Download current linux rv64gc lp64d non multilib workflow build logs
-        uses: actions/download-artifact@v4
+      - name: Download Current linux rv64gc lp64d non multilib workflow build logs
+        uses: ./.github/actions/common/download-build-log-artifact
         with:
-          name: ${{ steps.build-log-setup.outputs.patch_hash }}-linux-rv64gc-lp64d-non-multilib-build-log
-          path: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+          build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-linux-rv64gc-lp64d-non-multilib-build-log
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+          repository: ewlu/gcc-precommit-ci
 
       - name: Download Current newlib rv64gc lp64d non multilib Workflow build logs
-        uses: actions/download-artifact@v4
+        uses: ./.github/actions/common/download-build-log-artifact
         with:
-          name: ${{ steps.build-log-setup.outputs.patch_hash }}-newlib-rv64gc-lp64d-non-multilib-build-log
-          path: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+          build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-newlib-rv64gc-lp64d-non-multilib-build-log
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+          repository: ewlu/gcc-precommit-ci
 
       #TODO: Support Multilib. Restriction: https://github.com/ewlu/gcc-precommit-ci/pull/1919#discussion_r1686874053
 
