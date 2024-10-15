@@ -5,6 +5,9 @@ inputs:
     required: true
   github-token:
     required: true
+  repository:
+    required: true
+    description: 'name of the repo'
   output-dir:
     required: true
     description: 'Absolute path to the output directory'
@@ -19,7 +22,8 @@ runs:
       with:
         name: ${{ inputs.build-artifact-name }}
         path: ${{ inputs.output-dir }}
-        repository: patrick-rivos/gcc-postcommit-ci
+        github-token: ${{ inputs.github-token }}
+        repository: ${{ inputs.repository }}
       continue-on-error: true
 
     # If an artifact cannot be donwloaded using the action, use the download script instead
@@ -29,5 +33,5 @@ runs:
       shell: bash
       run: |
         cd riscv-gnu-toolchain
-        python ./scripts/download_artifact.py -name ${{ inputs.build-artifact-name }} -repo patrick-rivos/gcc-postcommit-ci -token ${{ inputs.github-token }} -outdir ${{ inputs.output-dir }}
+        python ./scripts/download_artifact.py -name ${{ inputs.build-artifact-name }} -repo ${{ inputs.repository }} -token ${{ inputs.github-token }} -outdir ${{ inputs.output-dir }}
       continue-on-error: true
