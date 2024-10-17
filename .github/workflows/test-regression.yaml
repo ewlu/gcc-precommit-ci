@@ -119,6 +119,15 @@ jobs:
           gcchash: ${{ inputs.patch_applied_gcchash }}
           multilib: ${{ inputs.multilib }}
 
+      - name: create gist test
+        run: |
+          echo "hello world" > gist.md
+          pwd
+          ls
+          python scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output comment_gist_url.txt --title test_gist.md
+          GIST_URL=$(cat comment_gist_url.txt)
+          echo $GIST_URL
+
       - name: Report build completion status
         if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
