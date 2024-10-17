@@ -54,44 +54,51 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Setup env
-        uses: ./.github/actions/common/setup-env
-        with:
-          free_up_space: false
-
-      - name: Install dependencies
+      - name: create gist test
         run: |
-          sudo apt install python3 -y
-          sudo apt install python-is-python3 -y
-          sudo apt install zip -y
+          echo "hello world" > gist.md
+          python3 ./scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output comment_gist_url.txt --title test_gist.md
+          GIST_URL=$(cat comment_gist_url.txt)
+          echo $GIST_URL
 
-      - name: Get patch data
-        id: data
-        run: |
-          python scripts/get_staging_patch.py -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }}
-          echo "timestamp=$(cat timestamp.txt)" >> $GITHUB_OUTPUT
-          echo "baseline_hash=$(cat baseline_hash.txt)" >> $GITHUB_OUTPUT
-          echo "tot_hash=$(cat tot_hash.txt)" >> $GITHUB_OUTPUT
-          echo "patch_id=$(cat patch_id.txt)" >> $GITHUB_OUTPUT
-          echo "issue_num=$(cat issue_num.txt)" >> $GITHUB_OUTPUT
-
-    outputs:
-      timestamp: ${{ steps.data.outputs.timestamp }}
-      baseline_gcc_hash: ${{ steps.data.outputs.baseline_hash }}
-      tip_of_tree_hash: ${{ steps.data.outputs.tot_hash }}
-      patch_id: ${{ steps.data.outputs.patch_id }}
-      issue_num: ${{ steps.data.outputs.issue_num }}
-
-  run-workflow:
-    needs: [get-patch-info]
-    if: ${{ inputs.timestamp == '' }}
-    secrets: inherit
-    uses: ./.github/workflows/patchworks.yaml
-    permissions:
-      issues: write
-    with:
-      timestamp: ${{ needs.get-patch-info.outputs.timestamp }}
-      baseline_gcc_hash: ${{ needs.get-patch-info.outputs.baseline_gcc_hash }}
-      tip_of_tree_hash: ${{ needs.get-patch-info.outputs.tip_of_tree_hash }}
-      patch_id: ${{ needs.get-patch-info.outputs.patch_id }}
-      original_patch_issue_num: ${{ needs.get-patch-info.outputs.issue_num }}
+  #     - name: Setup env
+  #       uses: ./.github/actions/common/setup-env
+  #       with:
+  #         free_up_space: false
+  #
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt install python3 -y
+  #         sudo apt install python-is-python3 -y
+  #         sudo apt install zip -y
+  #
+  #     - name: Get patch data
+  #       id: data
+  #       run: |
+  #         python scripts/get_staging_patch.py -repo ewlu/gcc-precommit-ci -token ${{ secrets.GITHUB_TOKEN }}
+  #         echo "timestamp=$(cat timestamp.txt)" >> $GITHUB_OUTPUT
+  #         echo "baseline_hash=$(cat baseline_hash.txt)" >> $GITHUB_OUTPUT
+  #         echo "tot_hash=$(cat tot_hash.txt)" >> $GITHUB_OUTPUT
+  #         echo "patch_id=$(cat patch_id.txt)" >> $GITHUB_OUTPUT
+  #         echo "issue_num=$(cat issue_num.txt)" >> $GITHUB_OUTPUT
+  #
+  #   outputs:
+  #     timestamp: ${{ steps.data.outputs.timestamp }}
+  #     baseline_gcc_hash: ${{ steps.data.outputs.baseline_hash }}
+  #     tip_of_tree_hash: ${{ steps.data.outputs.tot_hash }}
+  #     patch_id: ${{ steps.data.outputs.patch_id }}
+  #     issue_num: ${{ steps.data.outputs.issue_num }}
+  #
+  # run-workflow:
+  #   needs: [get-patch-info]
+  #   if: ${{ inputs.timestamp == '' }}
+  #   secrets: inherit
+  #   uses: ./.github/workflows/patchworks.yaml
+  #   permissions:
+  #     issues: write
+  #   with:
+  #     timestamp: ${{ needs.get-patch-info.outputs.timestamp }}
+  #     baseline_gcc_hash: ${{ needs.get-patch-info.outputs.baseline_gcc_hash }}
+  #     tip_of_tree_hash: ${{ needs.get-patch-info.outputs.tip_of_tree_hash }}
+  #     patch_id: ${{ needs.get-patch-info.outputs.patch_id }}
+  #     original_patch_issue_num: ${{ needs.get-patch-info.outputs.issue_num }}
