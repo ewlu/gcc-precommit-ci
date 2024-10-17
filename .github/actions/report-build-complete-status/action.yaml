@@ -59,7 +59,7 @@ runs:
         working-directory: riscv-gnu-toolchain
         run: |
           ONE_MB_IN_BYTES=1048000
-          tail -c $ONE_MB_IN_BYTES ${{ inputs.build_log_name }}.log > gist.md
+          tail -c $ONE_MB_IN_BYTES build/${{ inputs.build_log_name }}.log > gist.md
           cat gist.md
 
       - name: Create build failure gist
