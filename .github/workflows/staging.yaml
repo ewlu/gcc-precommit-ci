@@ -36,6 +36,7 @@ jobs:
       tip_of_tree_hash: ${{ inputs.tip_of_tree_hash }}
       patch_id: ${{ inputs.patch_id }}
       original_patch_issue_num: ${{ inputs.original_patch_issue_num }}
+    secrets: inherit
 
   get-patch-info:
     runs-on: [self-hosted, ping]
@@ -85,7 +86,6 @@ jobs:
   run-workflow:
     needs: [get-patch-info]
     if: ${{ inputs.timestamp == '' }}
-    secrets: inherit
     uses: ./.github/workflows/patchworks.yaml
     permissions:
       issues: write
@@ -95,3 +95,4 @@ jobs:
       tip_of_tree_hash: ${{ needs.get-patch-info.outputs.tip_of_tree_hash }}
       patch_id: ${{ needs.get-patch-info.outputs.patch_id }}
       original_patch_issue_num: ${{ needs.get-patch-info.outputs.issue_num }}
+    secrets: inherit
