@@ -57,7 +57,7 @@ jobs:
       - name: create gist test
         run: |
           echo "hello world" > gist.md
-          python3 ./scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output comment_gist_url.txt --title test_gist.md
+          python scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output comment_gist_url.txt --title test_gist.md
           GIST_URL=$(cat comment_gist_url.txt)
           echo $GIST_URL
 
