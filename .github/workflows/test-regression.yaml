@@ -119,6 +119,25 @@ jobs:
           gcchash: ${{ inputs.patch_applied_gcchash }}
           multilib: ${{ inputs.multilib }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r ../requirements.txt
+
+      - name: create gist test
+        run: |
+          echo "hello world" > gist.md
+          pwd
+          ls
+          python scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output comment_gist_url.txt --title test_gist1.md
+          GIST_URL=$(cat comment_gist_url.txt)
+          echo $GIST_URL
+
       - name: Report build completion status
         if: ${{ always() }}
         uses: ./.github/actions/report-build-complete-status
@@ -134,6 +153,7 @@ jobs:
           build_comment_id: ${{ inputs.build_comment_id }}
           additional_info: ${{ inputs.additional_info }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          gist_token: ${{ secrets.GIST_TOKEN }}
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
     outputs:
