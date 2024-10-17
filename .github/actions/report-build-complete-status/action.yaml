@@ -34,6 +34,9 @@ inputs:
   github_token:
     description: 'github token'
     required: true
+  gist_token:
+    description: 'gist token'
+    required: true
   patchwork_token:
     description: 'patchwork token'
     required: true
@@ -55,13 +58,8 @@ runs:
         shell: bash
         working-directory: riscv-gnu-toolchain
         run: |
-          cp ${{ inputs.build_log_name }}.log gist.md
-          FILE_SIZE=$(stat -c%s ./gist.md)
-          echo "File size of the log is: $FILE_SIZE"
           ONE_MB_IN_BYTES=1048000
-          if [ $FILE_SIZE -gt $ONE_MB_IN_BYTES ]; then
-            tail -c $ONE_MB_IN_BYTES ./gist.md > gist.md
-          fi
+          tail -c $ONE_MB_IN_BYTES ${{ inputs.build_log_name }}.log > gist.md
           cat gist.md
 
       - name: Create build failure gist
@@ -71,7 +69,7 @@ runs:
         working-directory: riscv-gnu-toolchain
         run: |
           if [ -e "gist.md" ]; then
-            python3 ./scripts/create_gist.py --token ${{ secrets.GIST_TOKEN }} --input gist.md --output gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
+            python3 ./scripts/create_gist.py --token ${{ inputs.gist_token }} --input gist.md --output gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
             GIST_URL=$(cat gist_url.txt)
             echo "gist_url=$GIST_URL" >> $GITHUB_OUTPUT
           fi
@@ -83,7 +81,7 @@ runs:
         working-directory: riscv-gnu-toolchain
         run: |
           if [ '${{ inputs.build_only }}' == 'true' ]; then export HASH=${{ inputs.tot_hash }}; else export HASH=${{ inputs.baseline_hash }}; fi
-          python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Build failure. Please check the ${{ inputs.build_log_name }} artifact. [Preview](${{ steps.gist-url.outputs.gist_url }})' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
+          python scripts/update_issue_status.py -token ${{ inputs.github_token }} -state 'Build failure. Please check the ${{ inputs.build_log_name }} artifact. [Tail Preview (1MB)](${{ steps.gist-url.outputs.gist_url }})' -comment ${{ inputs.build_comment_id }} -target ${{ inputs.target }} -check 'Build GCC' -repo ewlu/gcc-precommit-ci -baseline $HASH
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> comment.md
 
       - name: Update build complete report comment

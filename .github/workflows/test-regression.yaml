@@ -134,6 +134,7 @@ jobs:
           build_comment_id: ${{ inputs.build_comment_id }}
           additional_info: ${{ inputs.additional_info }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          gist_token: ${{ secrets.GIST_TOKEN }}
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
     outputs:
