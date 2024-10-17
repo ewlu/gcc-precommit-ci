@@ -54,6 +54,11 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Setup env
+        uses: ./.github/actions/common/setup-env
+        with:
+          free_up_space: false
+
       - name: create gist test
         run: |
           echo "hello world" > gist.md
@@ -63,10 +68,6 @@ jobs:
           GIST_URL=$(cat comment_gist_url.txt)
           echo $GIST_URL
 
-  #     - name: Setup env
-  #       uses: ./.github/actions/common/setup-env
-  #       with:
-  #         free_up_space: false
   #
   #     - name: Install dependencies
   #       run: |
