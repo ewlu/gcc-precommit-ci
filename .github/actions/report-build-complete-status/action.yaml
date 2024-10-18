@@ -66,7 +66,9 @@ runs:
           python3 ./scripts/create_gist.py --token ${{ inputs.gist_token }} --input gist.md --output gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
           GIST_URL=$(cat gist_url.txt)
           echo "gist url: $GIST_URL"
-          echo "gist_url=$GIST_URL" >> $GITHUB_OUTPUT
+          RAW_GIST_URL=$GIST_URL/raw/${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
+          echo "raw gist url: $RAW_GIST_URL"
+          echo "gist_url=$RAW_GIST_URL" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Build failure report
