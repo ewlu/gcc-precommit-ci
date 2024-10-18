@@ -71,6 +71,16 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r ../requirements.txt
+
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
@@ -134,6 +144,7 @@ jobs:
           build_comment_id: ${{ inputs.build_comment_id }}
           additional_info: ${{ inputs.additional_info }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          gist_token: ${{ secrets.GIST_TOKEN }}
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
     outputs:
@@ -380,6 +391,10 @@ jobs:
           unzip cache.zip
           rm -rf cache.zip
 
+      - name: Install Python dependencies
+        run: |
+          pip install -r ../requirements.txt
+
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
         with:
@@ -462,6 +477,7 @@ jobs:
           build_comment_id: ${{ inputs.build_comment_id }}
           additional_info: ${{ inputs.additional_info }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          gist_token: ${{ secrets.GIST_TOKEN }}
           patchwork_token: ${{ secrets.PATCHWORK_API }}
 
       - name: Build test starting report
