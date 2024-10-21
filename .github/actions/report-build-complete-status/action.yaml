@@ -61,10 +61,10 @@ runs:
         run: |
           ONE_MB_IN_BYTES=1048000
           tail -c $ONE_MB_IN_BYTES build/${{ inputs.build_log_name }}.log >> gist.md
-          python3 ./scripts/create_gist.py --token ${{ inputs.gist_token }} --input gist.md --output gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
+          python3 ./scripts/create_gist.py --token ${{ inputs.gist_token }} --input gist.md --output gist_url.txt --title ${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.log
           GIST_URL=$(cat gist_url.txt)
           echo "gist url: $GIST_URL"
-          RAW_GIST_URL=$GIST_URL/raw/${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.md
+          RAW_GIST_URL=$GIST_URL/raw/${{ inputs.issue_num }}_${{ inputs.patch_name }}_${{ inputs.build_log_name }}.log
           echo "raw gist url: $RAW_GIST_URL"
           echo "gist_url=$RAW_GIST_URL" >> $GITHUB_OUTPUT
         continue-on-error: true
