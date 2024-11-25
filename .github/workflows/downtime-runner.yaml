@@ -8,7 +8,7 @@ on:
 
 jobs:
   check_last_runner:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -77,7 +77,7 @@ jobs:
   fetch_patches:
     # This is a dedicated self hosted runner that will always* run this on time
     needs: [check_last_runner]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ needs.check_last_runner.outputs.start_date != '' }}
     defaults:
       run:
