@@ -1,0 +1,5 @@
+#
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117970
+#
+FAIL: g++.dg/modules/xtreme-header-7_b.C -std=c++2b
+FAIL: g++.dg/modules/xtreme-header_b.C -std=c++2b
