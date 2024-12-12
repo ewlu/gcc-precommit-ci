@@ -1,6 +1,10 @@
 name: Staging
 
 on:
+  schedule:
+    # Run every 15 minutes offset by 7 to try to avoid github's high-load times
+    # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
+    - cron: 7,22,37,52 * * * *
   pull_request:
     branches:
       - main
@@ -25,9 +29,22 @@ on:
         required: false
 
 jobs:
+  run-scheduled:
+    if: ${{ github.event_name == 'schedule' }}
+    uses: ./.github/workflows/patchworks.yaml
+    permissions:
+      issues: write
+    with:
+      timestamp: ''
+      baseline_gcc_hash: ''
+      tip_of_tree_hash: ''
+      patch_id: ''
+      original_patch_issue_num: ''
+    secrets: inherit
+
   manually-triggered-workflow-dispatch:
     uses: ./.github/workflows/patchworks.yaml
-    if: ${{ inputs.timestamp != '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       issues: write
     with:
@@ -40,7 +57,7 @@ jobs:
 
   get-patch-info:
     runs-on: [self-hosted, ping]
-    if: ${{ inputs.timestamp == '' }}
+    if: ${{ github.event_name == 'pull_request' }}
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -85,7 +102,7 @@ jobs:
 
   run-workflow:
     needs: [get-patch-info]
-    if: ${{ inputs.timestamp == '' }}
+    if: ${{ github.event_name == 'pull_request' }}
     uses: ./.github/workflows/patchworks.yaml
     permissions:
       issues: write
