@@ -74,7 +74,11 @@ jobs:
       - name: Get timestamps and make directories
         if: ${{ inputs.timestamp == '' }}
         run: |
-          python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
+          if [ "${{ github.workflow }}" == "Staging" ] && [ "${{ github.event_name }}" == "schedule" ]; then
+            python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Staging
+          else
+            python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
+          fi
           PRIOR_RUN_TIME=$(cat date_prior.txt)
           CURRENT_RUN_TIME=$(cat date_current.txt)
           TZ=UTC date -d "@$((($(date -d $CURRENT_RUN_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
@@ -107,6 +111,24 @@ jobs:
             python scripts/create_patches_files.py -backup $(cat prior_run_time_minus_15_min_rounded.txt) -start $(cat prior_run_time_rounded.txt) -end $(cat current_time_rounded.txt)
           else
             python scripts/create_patches_files.py -patch ${{ inputs.patch_id }}
+          fi
+          if [ "${{ github.workflow }}" == "Staging" ] && [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "Running non riscv patches"
+            # save riscv patches
+            mv patch_urls riscv_patch_urls
+            mv patchworks_metadata riscv_patchworks_metadata
+            mv artifact_names.txt riscv_artifact_names.txt
+            # setup again to get all patches so we can get the difference and avoid double work
+            mkdir -p patch_urls
+            mkdir -p patchworks_metadata
+            python scripts/create_patches_files.py -backup $(cat prior_run_time_minus_15_min_rounded.txt) -start $(cat prior_run_time_rounded.txt) -end $(cat current_time_rounded.txt) -all-patches
+            # perform the difference
+            for file in riscv_patch_urls/*; do
+              base=$(basename $file)
+              rm patch_urls/$base patchworks_metadata/$base
+              cat artifact_names.txt | sed "s/\s*'$base'\s*//g" | sed "s/,,/,/g" > temp.txt
+              mv temp.txt artifact_names.txt
+            done
           fi
 
       - name: List patch artifacts
