@@ -118,14 +118,19 @@ jobs:
             mv patch_urls riscv_patch_urls
             mv patchworks_metadata riscv_patchworks_metadata
             mv artifact_names.txt riscv_artifact_names.txt
+            echo "saved riscv patches"
+            ls riscv_patch_urls
             # setup again to get all patches so we can get the difference and avoid double work
             mkdir -p patch_urls
             mkdir -p patchworks_metadata
             python scripts/create_patches_files.py -backup $(cat prior_run_time_minus_15_min_rounded.txt) -start $(cat prior_run_time_rounded.txt) -end $(cat current_time_rounded.txt) -all-patches
+            echo "all found patches"
+            ls patch_urls
             # perform the difference
             for file in riscv_patch_urls/*; do
               base=$(basename $file)
-              rm patch_urls/$base patchworks_metadata/$base
+              echo "removing $base from all found patches"
+              rm -rf patch_urls/$base patchworks_metadata/$base
               cat artifact_names.txt | sed "s/\s*'$base'\s*//g" | sed "s/,,/,/g" > temp.txt
               mv temp.txt artifact_names.txt
             done
