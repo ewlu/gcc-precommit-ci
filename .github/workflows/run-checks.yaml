@@ -454,34 +454,39 @@ jobs:
       test_comment_id: ${{ steps.test-comment.outputs.comment-id }}
       build_warning: ${{ steps.run-build-warning.outputs.build_warning }}
 
-  # Single target build-only for build warning comparisons
-  creg: # Check Regressions. Short name so I can see the matrix string in github
-    needs: [download_patches, create-issue, apply, initialize-build-test-comments]
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: [linux, newlib]
-        target:
-          [
-            rv64gc-lp64d,
-          ]
-        multilib: [non-multilib]
-    uses: ./.github/workflows/test-regression.yaml
-    with:
-      patch_name: ${{ inputs.patch_name }}
-      mode: ${{ matrix.mode }}
-      target: ${{ matrix.target }}
-      baseline_hash: ${{ inputs.baseline_hash }}
-      patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
-      multilib: ${{ matrix.multilib }}
-      build_only: ${{ needs.initialize-build-test-comments.outputs.build_warning }}
-      issue_num: ${{ needs.create-issue.outputs.issue_num }}
-      build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
-      test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
-      run_on_self_hosted: false
-      tot_hash: ${{ inputs.tot_hash }}
-      additional_info: ${{ needs.create-issue.outputs.additional_info }}
-    secrets: inherit
+
+  ################################################################################
+  #   Dropping build only targets for now since the github runners are flakey    #
+  ################################################################################
+
+  # # Single target build-only for build warning comparisons
+  # creg: # Check Regressions. Short name so I can see the matrix string in github
+  #   needs: [download_patches, create-issue, apply, initialize-build-test-comments]
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       mode: [linux, newlib]
+  #       target:
+  #         [
+  #           rv64gc-lp64d,
+  #         ]
+  #       multilib: [non-multilib]
+  #   uses: ./.github/workflows/test-regression.yaml
+  #   with:
+  #     patch_name: ${{ inputs.patch_name }}
+  #     mode: ${{ matrix.mode }}
+  #     target: ${{ matrix.target }}
+  #     baseline_hash: ${{ inputs.baseline_hash }}
+  #     patch_applied_gcchash: ${{ needs.apply.outputs.patch_applied_gcchash }}
+  #     multilib: ${{ matrix.multilib }}
+  #     build_only: ${{ needs.initialize-build-test-comments.outputs.build_warning }}
+  #     issue_num: ${{ needs.create-issue.outputs.issue_num }}
+  #     build_comment_id: ${{ needs.initialize-build-test-comments.outputs.build_comment_id }}
+  #     test_comment_id: ${{ needs.initialize-build-test-comments.outputs.test_comment_id }}
+  #     run_on_self_hosted: false
+  #     tot_hash: ${{ inputs.tot_hash }}
+  #     additional_info: ${{ needs.create-issue.outputs.additional_info }}
+  #   secrets: inherit
 
   cmreg-linux-sh: # Bitmanip self hosted runner multilib build
     needs: [download_patches, create-issue, apply, initialize-build-test-comments]
