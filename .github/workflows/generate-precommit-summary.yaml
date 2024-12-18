@@ -218,93 +218,99 @@ jobs:
           name: ${{ inputs.patch_name }}-downloaded-patches
           path: ./riscv-gnu-toolchain/patches
 
-      - name: Build Log Comparison Setup
-        id: build-log-setup
-        run: |
-          mkdir -p previous_build_logs/build
-          echo "previous_build_logs_path=$(readlink -f previous_build_logs)" >> $GITHUB_OUTPUT
-          mkdir -p previous_build_log_zips
-          echo "previous_build_log_zips_path=$(readlink -f previous_build_log_zips)" >> $GITHUB_OUTPUT
-          mkdir -p current_build_logs/build
-          echo "current_build_logs_path=$(readlink -f current_build_logs)" >> $GITHUB_OUTPUT
-          mkdir -p current_build_log_zips
-          echo "current_build_log_zips_path=$(readlink -f current_build_log_zips)" >> $GITHUB_OUTPUT
-          mkdir build_warnings
-          echo "build_warnings_directory=$(readlink -f ./build_warnings/)" >> $GITHUB_OUTPUT
-          echo "new_build_warnings_path=$(readlink -f ./build_warnings/new_build_warnings.md)" >> $GITHUB_OUTPUT
-          echo "resolved_build_warnings_path=$(readlink -f ./build_warnings/resolved_build_warnings.md)" >> $GITHUB_OUTPUT
-          echo "patch_hash=$(tail -n 1 patches/${{ inputs.patch_name }})" >> $GITHUB_OUTPUT
+      ################################################################################
+      #    remove build log comparison stuff while we disable build-only runners     #
+      ################################################################################
+
+      # - name: Build Log Comparison Setup
+      #   id: build-log-setup
+      #   run: |
+      #     mkdir -p previous_build_logs/build
+      #     echo "previous_build_logs_path=$(readlink -f previous_build_logs)" >> $GITHUB_OUTPUT
+      #     mkdir -p previous_build_log_zips
+      #     echo "previous_build_log_zips_path=$(readlink -f previous_build_log_zips)" >> $GITHUB_OUTPUT
+      #     mkdir -p current_build_logs/build
+      #     echo "current_build_logs_path=$(readlink -f current_build_logs)" >> $GITHUB_OUTPUT
+      #     mkdir -p current_build_log_zips
+      #     echo "current_build_log_zips_path=$(readlink -f current_build_log_zips)" >> $GITHUB_OUTPUT
+      #     mkdir build_warnings
+      #     echo "build_warnings_directory=$(readlink -f ./build_warnings/)" >> $GITHUB_OUTPUT
+      #     echo "new_build_warnings_path=$(readlink -f ./build_warnings/new_build_warnings.md)" >> $GITHUB_OUTPUT
+      #     echo "resolved_build_warnings_path=$(readlink -f ./build_warnings/resolved_build_warnings.md)" >> $GITHUB_OUTPUT
+      #     echo "patch_hash=$(tail -n 1 patches/${{ inputs.patch_name }})" >> $GITHUB_OUTPUT
+
       #
       # begin downloading current workflow build logs
       #
-      - name: Download Current linux rv64gc lp64d non multilib workflow build logs
-        uses: ./.github/actions/common/download-build-log-artifact
-        with:
-          build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-linux-rv64gc-lp64d-non-multilib-build-log
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
-          repository: ewlu/gcc-precommit-ci
 
-      - name: Download Current newlib rv64gc lp64d non multilib Workflow build logs
-        uses: ./.github/actions/common/download-build-log-artifact
-        with:
-          build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-newlib-rv64gc-lp64d-non-multilib-build-log
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
-          repository: ewlu/gcc-precommit-ci
+      # - name: Download Current linux rv64gc lp64d non multilib workflow build logs
+      #   uses: ./.github/actions/common/download-build-log-artifact
+      #   with:
+      #     build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-linux-rv64gc-lp64d-non-multilib-build-log
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+      #     repository: ewlu/gcc-precommit-ci
+
+      # - name: Download Current newlib rv64gc lp64d non multilib Workflow build logs
+      #   uses: ./.github/actions/common/download-build-log-artifact
+      #   with:
+      #     build-artifact-name: ${{ steps.build-log-setup.outputs.patch_hash }}-newlib-rv64gc-lp64d-non-multilib-build-log
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     output-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+      #     repository: ewlu/gcc-precommit-ci
 
       #TODO: Support Multilib. Restriction: https://github.com/ewlu/gcc-precommit-ci/pull/1919#discussion_r1686874053
 
-      - name: Unzip current build log artifacts
-        uses: ./.github/actions/common/unzip-all-zips
-        with:
-          input-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
-          output-dir: ${{ steps.build-log-setup.outputs.current_build_logs_path }}
-          include-pattern: "*-stderr.log"
-      #
-      # begin downloading previous workflow build logs
-      #
-      - name: Download previous build log artifacts
-        uses: ./.github/actions/download-all-build-log-artifacts
-        with:
-          gcchash: ${{ inputs.baseline_hash }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-dir: ${{ steps.build-log-setup.outputs.previous_build_log_zips_path }}
+      # - name: Unzip current build log artifacts
+      #   uses: ./.github/actions/common/unzip-all-zips
+      #   with:
+      #     input-dir: ${{ steps.build-log-setup.outputs.current_build_log_zips_path }}
+      #     output-dir: ${{ steps.build-log-setup.outputs.current_build_logs_path }}
+      #     include-pattern: "*-stderr.log"
+      # #
+      # # begin downloading previous workflow build logs
+      # #
+      # - name: Download previous build log artifacts
+      #   uses: ./.github/actions/download-all-build-log-artifacts
+      #   with:
+      #     gcchash: ${{ inputs.baseline_hash }}
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     output-dir: ${{ steps.build-log-setup.outputs.previous_build_log_zips_path }}
 
-      - name: Unzip previous build log artifacts
-        id: unzip-previous-build-log-artifacts
-        uses: ./.github/actions/common/unzip-all-zips
-        with:
-          input-dir: ${{ steps.build-log-setup.outputs.previous_build_log_zips_path }}
-          output-dir: ${{ steps.build-log-setup.outputs.previous_build_logs_path }}
-          include-pattern: "*-stderr.log"
+      # - name: Unzip previous build log artifacts
+      #   id: unzip-previous-build-log-artifacts
+      #   uses: ./.github/actions/common/unzip-all-zips
+      #   with:
+      #     input-dir: ${{ steps.build-log-setup.outputs.previous_build_log_zips_path }}
+      #     output-dir: ${{ steps.build-log-setup.outputs.previous_build_logs_path }}
+      #     include-pattern: "*-stderr.log"
 
-      - name: Parse Build Warnings
-        id: parse-new-build-warnings
-        run: |
-          echo "build_log_exist=false" >> $GITHUB_OUTPUT
-          python ./scripts/parse_build_warnings.py --old-dir ${{ steps.build-log-setup.outputs.previous_build_logs_path }}/build --new-dir ${{ steps.build-log-setup.outputs.current_build_logs_path }}/build --new-warnings-output ${{ steps.build-log-setup.outputs.new_build_warnings_path }} --resolved-warnings-output ${{ steps.build-log-setup.outputs.resolved_build_warnings_path }} --repo pre-commit
-          if [ -f "${{ steps.build-log-setup.outputs.new_build_warnings_path }}" ]; then
-            cat ${{ steps.build-log-setup.outputs.new_build_warnings_path }}
-            echo "build_log_exist=true" >> $GITHUB_OUTPUT
-          else
-            echo "New build logs didn't exist"
-          fi
-          if [ -f "${{ steps.build-log-setup.outputs.resolved_build_warnings_path }}" ]; then
-            cat ${{ steps.build-log-setup.outputs.resolved_build_warnings_path }}
-            echo "build_log_exist=true" >> $GITHUB_OUTPUT
-          else
-            echo "Resolved build logs didn't exist"
-          fi
-        continue-on-error: true
+      # - name: Parse Build Warnings
+      #   id: parse-new-build-warnings
+      #   run: |
+      #     echo "build_log_exist=false" >> $GITHUB_OUTPUT
+      #     python ./scripts/parse_build_warnings.py --old-dir ${{ steps.build-log-setup.outputs.previous_build_logs_path }}/build --new-dir ${{ steps.build-log-setup.outputs.current_build_logs_path }}/build --new-warnings-output ${{ steps.build-log-setup.outputs.new_build_warnings_path }} --resolved-warnings-output ${{ steps.build-log-setup.outputs.resolved_build_warnings_path }} --repo pre-commit
+      #     if [ -f "${{ steps.build-log-setup.outputs.new_build_warnings_path }}" ]; then
+      #       cat ${{ steps.build-log-setup.outputs.new_build_warnings_path }}
+      #       echo "build_log_exist=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "New build logs didn't exist"
+      #     fi
+      #     if [ -f "${{ steps.build-log-setup.outputs.resolved_build_warnings_path }}" ]; then
+      #       cat ${{ steps.build-log-setup.outputs.resolved_build_warnings_path }}
+      #       echo "build_log_exist=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "Resolved build logs didn't exist"
+      #     fi
+      #   continue-on-error: true
 
-      - name: Upload Build Warnings
-        if: ${{ steps.parse-new-build-warnings.outputs.build_log_exist == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build-log-setup.outputs.patch_hash }}-build-warnings
-          path: ${{ steps.build-log-setup.outputs.build_warnings_directory }}
-          retention-days: 90
+      # - name: Upload Build Warnings
+      #   if: ${{ steps.parse-new-build-warnings.outputs.build_log_exist == 'true' }}
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.build-log-setup.outputs.patch_hash }}-build-warnings
+      #     path: ${{ steps.build-log-setup.outputs.build_warnings_directory }}
+      #     retention-days: 90
 
     outputs:
       baseline_hash: ${{ inputs.baseline_hash }}
