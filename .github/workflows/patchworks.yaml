@@ -133,7 +133,7 @@ jobs:
                 base=$(basename $file)
                 echo "removing $base from all found patches"
                 rm -rf patch_urls/$base patchworks_metadata/$base
-                cat artifact_names.txt | sed "s/\s*'$base'\s*//g" | sed "s/,,/,/g" | sed "s/,]/]/g" | sed "s/[,/[/g"> temp.txt
+                cat artifact_names.txt | sed "s/\s*'$base'\s*//g" | sed "s/,,/,/g" | sed "s/,\]/\]/g" | sed "s/\[,/\[/g"> temp.txt
                 mv temp.txt artifact_names.txt
               done
             fi
