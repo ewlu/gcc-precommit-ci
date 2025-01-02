@@ -1,10 +1,10 @@
 name: Staging
 
 on:
-  schedule:
-    # Run every 15 minutes offset by 7 to try to avoid github's high-load times
-    # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
-    - cron: 7,22,37,52 * * * *
+  # schedule:
+  #   # Run every 15 minutes offset by 7 to try to avoid github's high-load times
+  #   # https://stackoverflow.com/questions/59560214/github-action-works-on-push-but-not-scheduled
+  #   - cron: 7,22,37,52 * * * *
   pull_request:
     branches:
       - main
