@@ -45,7 +45,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: production
     if: ${{ inputs.run_on_self_hosted != 'true' }}
     defaults:
@@ -151,7 +151,7 @@ jobs:
       build_status: ${{ steps.build-status.outputs.build_status }}
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: production
     needs: [build]
     # Skip linux multilib
