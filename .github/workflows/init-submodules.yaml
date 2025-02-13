@@ -55,20 +55,20 @@ jobs:
             riscv-gnu-toolchain/glibc
             riscv-gnu-toolchain/newlib
             riscv-gnu-toolchain/qemu
-          key: submodules-archive-12 # Numbered archive to allow for easy transition when bumping submodules
+          key: submodules-archive-13 # Numbered archive to allow for easy transition when bumping submodules
 
       - name: Initalize submodules cache
         id: cache-init
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
         run: |
-          git submodule update --init --recursive --depth 1 binutils
-          git submodule update --init --recursive --depth 1 dejagnu
-          git submodule update --init --recursive --depth 1 gdb
-          git submodule update --init --recursive --depth 1 glibc
-          git submodule update --init --recursive --depth 1 newlib
+          git submodule update --init --recursive binutils
+          git submodule update --init --recursive dejagnu
+          git submodule update --init --recursive gdb
+          git submodule update --init --recursive glibc
+          git submodule update --init --recursive newlib
           # qemu is a bit special since one submodule in edk2 lost its submodule hook
           # therefore, we need to apply the patch which updates the submodule hook
-          git submodule update --init --depth 1 qemu
+          git submodule update --init qemu
           cd qemu
           git submodule update --init roms/edk2
           cd roms/edk2
@@ -79,7 +79,7 @@ jobs:
           git cherry-pick 95d8a1c255cfb8e063d679930d08ca6426eb5701 --strategy-option theirs
           cd ../../../
           # --rebase is added to rebase newly applied changes to the base submodule hash
-          git submodule update --init --recursive --depth 1 --rebase qemu
+          git submodule update --init --recursive --rebase qemu
         continue-on-error: true
 
       - name: Initalize submodules cache
@@ -87,14 +87,14 @@ jobs:
         run: |
           echo "Failed to initialize cache submodules. Retrying in 1 min"
           sleep 60
-          git submodule update --init --recursive --depth 1 binutils
-          git submodule update --init --recursive --depth 1 dejagnu
-          git submodule update --init --recursive --depth 1 gdb
-          git submodule update --init --recursive --depth 1 glibc
-          git submodule update --init --recursive --depth 1 newlib
+          git submodule update --init --recursive binutils
+          git submodule update --init --recursive dejagnu
+          git submodule update --init --recursive gdb
+          git submodule update --init --recursive glibc
+          git submodule update --init --recursive newlib
           # qemu is a bit special since one submodule in edk2 lost its submodule hook
           # therefore, we need to apply the patch which updates the submodule hook
-          git submodule update --init --depth 1 qemu
+          git submodule update --init qemu
           cd qemu
           git submodule update --init roms/edk2
           cd roms/edk2
@@ -106,7 +106,7 @@ jobs:
           git cherry-pick 95d8a1c255cfb8e063d679930d08ca6426eb5701 --strategy-option theirs
           cd ../../../
           # --rebase is added to rebase newly applied changes to the base submodule hash
-          git submodule update --init --recursive --depth 1 --rebase qemu
+          git submodule update --init --recursive --rebase qemu
 
       - name: Initialize gcc
         if: steps.retrieve-cache.outputs.cache-hit != 'true'
@@ -157,7 +157,7 @@ jobs:
             riscv-gnu-toolchain/glibc
             riscv-gnu-toolchain/newlib
             riscv-gnu-toolchain/qemu
-          key: submodules-archive-12
+          key: submodules-archive-13
 
       - name: Make cache zip
         run: |
