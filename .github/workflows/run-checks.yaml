@@ -18,7 +18,7 @@ on:
 
 jobs:
   download_patches:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -58,7 +58,7 @@ jobs:
 
   create-issue:
     needs: [download_patches]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     permissions:
       issues: write
     defaults:
@@ -186,7 +186,7 @@ jobs:
 
   apply:
     needs: [download_patches, create-issue]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     defaults:
       run:
@@ -376,7 +376,7 @@ jobs:
   initialize-build-test-comments:
     needs: [download_patches, create-issue, apply]
     if: ${{ needs.apply.outputs.early_exit != 'true' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
@@ -560,7 +560,7 @@ jobs:
   link-staging-issue:
     needs: [download_patches, create-issue, apply, initialize-build-test-comments, cmreg-linux-sh, creg-sh, summarize]
     if: ${{ !cancelled() && inputs.original_patch_issue_num != '' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: riscv-gnu-toolchain
