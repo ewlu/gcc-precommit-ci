@@ -48,7 +48,7 @@ on:
 jobs:
   compare-artifacts:
     if: ${{ always() && inputs.build_only != 'true' }} # ensure comparison always runs even on error
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     defaults:
       run:
@@ -319,7 +319,7 @@ jobs:
   generate-issues:
     if: ${{ always() && inputs.build_only != 'true' }} # ensure generate issues always runs even on error
     needs: [compare-artifacts]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     permissions:
       issues: write
     defaults:

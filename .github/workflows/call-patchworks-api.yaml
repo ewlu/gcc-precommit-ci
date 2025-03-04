@@ -6,7 +6,7 @@ on:
 
 jobs:
   get-patch-info:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     if: ${{ !github.event.issue.pull_request && (contains(github.event.comment.body, '/pass_') || contains(github.event.comment.body, '/warn_') || contains(github.event.comment.body, '/error_')) && (github.event.comment.user.login == 'ewlu' || github.event.comment.user.login == 'patrick-rivos') }}
     defaults:
@@ -77,7 +77,7 @@ jobs:
   report-pass:
     needs: [get-patch-info]
     if: ${{ contains(github.event.comment.body, '/pass') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     defaults:
       run:
@@ -109,7 +109,7 @@ jobs:
   report-warn:
     needs: [get-patch-info]
     if: ${{ contains(github.event.comment.body, '/warn') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     defaults:
       run:
@@ -140,7 +140,7 @@ jobs:
   report-error:
     needs: [get-patch-info]
     if: ${{ contains(github.event.comment.body, '/error') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     environment: production
     defaults:
       run:
