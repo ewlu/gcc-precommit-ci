@@ -361,6 +361,28 @@ jobs:
           name: ${{ inputs.patch_applied_gcchash }}-previous-logs
           path: ./riscv-gnu-toolchain/previous_logs
 
+      # debug logs
+      - name: Download linux rv64 bitmanip debug url artifact
+        uses: actions/download-artifacts@v4
+        with:
+          name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
+          path: ./riscv-gnu-toolchain/
+        continue-on-error: true
+
+      - name: Download linux rv64 vector debug url artifact
+        uses: actions/download-artifacts@v4
+        with:
+          name: gcc-linux-rv64gcv-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
+          path: ./riscv-gnu-toolchain/
+        continue-on-error: true
+
+      - name: Download newlib rv64 vector debug url artifact
+        uses: actions/download-artifacts@v4
+        with:
+          name: gcc-newlib-rv64gcv-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
+          path: ./riscv-gnu-toolchain
+        continue-on-error: true
+
       - name: Download patches artifact
         if: ${{ needs.compare-artifacts.outputs.workflow_dispatch == 'true' }}
         run: |
@@ -416,6 +438,10 @@ jobs:
               printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." >> trimmed_comment_gist.md
             fi
           fi
+          printf "\n### Testsuite download links\n" >> trimmed_comment.md
+          echo "Please check the Additional Information Build Targets section to see which testsuite log to look at. Do note that if you cannot download the artifacts, you may need to sign in to github first."
+          cat gcc-*.md >> trimmed_comment.md
+          echo "" >> trimmed_comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
           cat trimmed_comment.md
 
