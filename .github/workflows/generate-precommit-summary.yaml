@@ -363,21 +363,21 @@ jobs:
 
       # debug logs
       - name: Download linux rv64 bitmanip debug url artifact
-        uses: actions/download-artifacts@v4
+        uses: actions/download-artifact@v4
         with:
           name: gcc-linux-rv64gc_zba_zbb_zbc_zbs-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
           path: ./riscv-gnu-toolchain/
         continue-on-error: true
 
       - name: Download linux rv64 vector debug url artifact
-        uses: actions/download-artifacts@v4
+        uses: actions/download-artifact@v4
         with:
           name: gcc-linux-rv64gcv-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
           path: ./riscv-gnu-toolchain/
         continue-on-error: true
 
       - name: Download newlib rv64 vector debug url artifact
-        uses: actions/download-artifacts@v4
+        uses: actions/download-artifact@v4
         with:
           name: gcc-newlib-rv64gcv-lp64d-${{ inputs.patch_applied_gcchash }}-multilib-debug-url.md
           path: ./riscv-gnu-toolchain
