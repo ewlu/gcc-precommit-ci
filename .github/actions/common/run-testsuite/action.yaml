@@ -44,6 +44,8 @@ runs:
           retention-days: 90
 
       - name: Build artifact url artifact
+        shell: bash
+        working-directory: riscv-gnu-toolchain
         run: |
           echo "${{ inputs.mode }}-${{ inputs.target }} testsuite logs: ${{ steps.debug-artifact.outputs.artifact-url }}" > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
           cat gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
