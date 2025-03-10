@@ -439,7 +439,7 @@ jobs:
             fi
           fi
           printf "\n### Testsuite download links\n" >> trimmed_comment.md
-          echo "Please check the Additional Information Build Targets section to see which testsuite log to look at. Do note that if you cannot download the artifacts, you may need to sign in to github first."
+          echo "Please check the Additional Information Build Targets section to see which testsuite log to look at. If you cannot download the artifacts or get a 404 error, you may need to sign in to github first." >> trimmed_comment.md
           cat gcc-*.md >> trimmed_comment.md
           echo "" >> trimmed_comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
