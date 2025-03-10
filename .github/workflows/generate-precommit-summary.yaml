@@ -438,8 +438,8 @@ jobs:
               printf "\nThe file was greater than 1 MB and has been trimmed to fit the gist limit. Please check logs for the untrimmed issue." >> trimmed_comment_gist.md
             fi
           fi
-          printf "\n### Testsuite download links\n" >> trimmed_comment.md
-          echo "Please check the Additional Information Build Targets section to see which testsuite log to look at. If you cannot download the artifacts or get a 404 error, you may need to sign in to github first." >> trimmed_comment.md
+          printf "\n### Testsuite download links\n\n" >> trimmed_comment.md
+          printf "Please check the Additional Information Build Targets section to see which testsuite log to look at. If you cannot download the artifacts or get a 404 error, you may need to sign in to github first.\n\n" >> trimmed_comment.md
           cat gcc-*.md >> trimmed_comment.md
           echo "" >> trimmed_comment.md
           printf "\n[Additional information](${{ inputs.additional_info }})\n" >> trimmed_comment.md
