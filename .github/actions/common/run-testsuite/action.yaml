@@ -35,11 +35,27 @@ runs:
           fi
 
       - name: Upload debug artifacts
+        id: debug-artifact
         uses: actions/upload-artifact@v4
         with:
           name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-output.log
           path: |
             riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-output.log
+          retention-days: 90
+
+      - name: Build artifact url artifact
+        shell: bash
+        working-directory: riscv-gnu-toolchain
+        run: |
+          echo "${{ inputs.mode }}-${{ inputs.target }} testsuite logs: [zip](${{ steps.debug-artifact.outputs.artifact-url }})" > gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
+          cat gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
+
+      - name: Upload artifact url artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
+          path: |
+            riscv-gnu-toolchain/gcc-${{ inputs.mode }}-${{ inputs.target }}-${{ inputs.gcchash }}-${{ inputs.multilib }}-debug-url.md
           retention-days: 90
 
       - name: Build sum files
