@@ -79,7 +79,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
@@ -223,6 +223,7 @@ jobs:
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
           ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
+          sed -i "s/ --user / --user --break-system-packages /g" Makefile
 
       - name: Restore Stage2 Artifacts
         uses: ./.github/actions/common/restore-stage-2
@@ -318,6 +319,7 @@ jobs:
           cd build
           TARGET_TUPLE=($(echo ${{ inputs.target }} | tr "-" "\n"))
           ../../configure-scripts/${TARGET_TUPLE[0]}-${TARGET_TUPLE[1]}
+          sed -i "s/ --user / --user --break-system-packages /g" Makefile
 
       - name: Build
         run: |
@@ -393,7 +395,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Extract and apply patches
         uses: ./.github/actions/extract-apply-patches-trunk-or-baseline
