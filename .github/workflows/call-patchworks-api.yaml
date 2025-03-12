@@ -28,7 +28,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Get patch-name
         id: patch-name
@@ -98,7 +98,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Report pass
         run: |
@@ -130,7 +130,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Report Warning
         run: |
@@ -161,7 +161,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Report Error
         run: |

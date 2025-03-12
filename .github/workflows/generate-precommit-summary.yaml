@@ -81,7 +81,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Download baseline sum files
         run: |
@@ -341,7 +341,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt --break-system-packages
 
       - name: Download summaries artifact
         uses: actions/download-artifact@v4
