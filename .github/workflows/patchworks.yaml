@@ -90,7 +90,7 @@ jobs:
         if: ${{ inputs.timestamp != '' }}
         run: |
           # only use date to convert timestamp to isoformatted time.
-          python scripts/create_timestamp_files.py -timestamp $(date -d "${{ inputs.timestamp }}" '+%Y-%m-dT%H:%M:%S')
+          python scripts/create_timestamp_files.py -timestamp $(date -d "${{ inputs.timestamp }}" '+%Y-%m-%dT%H:%M:%S')
 
           cat prior_run_time_minus_15_min_rounded.txt
           cat prior_run_time_rounded.txt
