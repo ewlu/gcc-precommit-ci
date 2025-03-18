@@ -75,19 +75,13 @@ jobs:
         if: ${{ inputs.timestamp == '' }}
         run: |
           if [ "${{ github.workflow }}" == "Staging" ] && [ "${{ github.event_name }}" == "schedule" ]; then
-            python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Staging
+            python scripts/create_timestamp_files.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Staging
           else
-            python scripts/get_previous_timestamp.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
+            python scripts/create_timestamp_files.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
           fi
-          PRIOR_RUN_TIME=$(cat date_prior.txt)
-          CURRENT_RUN_TIME=$(cat date_current.txt)
-          TZ=UTC date -d "@$((($(date -d $CURRENT_RUN_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
-          TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) + 0) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_rounded.txt
-          TZ=UTC date -d "@$((($(date -d $PRIOR_RUN_TIME +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_minus_15_min_rounded.txt
 
           cat runs.log
 
-          echo $PRIOR_RUN_TIME
           cat prior_run_time_minus_15_min_rounded.txt
           cat prior_run_time_rounded.txt
           cat current_time_rounded.txt
@@ -95,9 +89,8 @@ jobs:
       - name: Update times for workflow dispatch
         if: ${{ inputs.timestamp != '' }}
         run: |
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) + 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > current_time_rounded.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 900) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_rounded.txt
-          TZ=UTC date -d "@$((($(date -d '${{ inputs.timestamp }}' +%s) - 1800) / 900 * 900))" '+%Y-%m-%dT%H:%M:%S' > prior_run_time_minus_15_min_rounded.txt
+          # only use date to convert timestamp to isoformatted time.
+          python scripts/create_timestamp_files.py -timestamp $(date -d "${{ inputs.timestamp }}" '+%Y-%m-dT%H:%M:%S')
 
           cat prior_run_time_minus_15_min_rounded.txt
           cat prior_run_time_rounded.txt
