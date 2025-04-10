@@ -16,7 +16,7 @@ runs:
         if: ${{ inputs.init == 'true' }}
         run: |
           rm -rf gcc
-          git clone git://gcc.gnu.org/git/gcc.git
+          git clone https://github.com/gcc-mirror/gcc.git
         continue-on-error: true
 
       - name: Sleep and retry
@@ -26,7 +26,7 @@ runs:
         run: |
           echo "Failed to clone gcc. Retrying in 1 min"
           sleep 60
-          git clone git://gcc.gnu.org/git/gcc.git
+          git clone https://github.com/gcc-mirror/gcc.git
 
       - name: Checkout master
         shell: bash
