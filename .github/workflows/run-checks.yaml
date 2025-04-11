@@ -43,10 +43,26 @@ jobs:
           path: ./riscv-gnu-toolchain/patchworks_metadata
 
       - name: Download patches from urls
+        id: patch-download
         run: |
           mkdir patches
           scripts/download_patches.sh -p ${{ inputs.patch_name }}
-          mv patchworks_metadata/${{ inputs.patch_name }} patches/
+          cp patchworks_metadata/${{ inputs.patch_name }} patches/
+        continue-on-error: true
+
+        # patchwork.sourceware.org has been rather flakey lately with regards
+        # to downloading the patches. when it does, wget will fail on the
+        # scripts/download_patches.sh step and should not move the patch from the
+        # patchworks_metadata folder. Retry downloading the patches from
+        # ozlabs
+      - name: Try different server to download patches from
+        if: ${{ steps.patch-download.outcome == 'failure' }}
+        run: |
+          rm -rf patches
+          mkdir patches
+          sed -i 's/patchwork.sourceware.org/patchwork.ozlabs.org/g' patch_urls/${{ inputs.patch_name }}
+          scripts/download_patches.sh -p ${{ inputs.patch_name }}
+          cp patchworks_metadata/${{ inputs.patch_name }} patches/
 
       - name: Upload patches artifact
         uses: actions/upload-artifact@v4
