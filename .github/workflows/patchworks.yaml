@@ -28,7 +28,7 @@ on:
     inputs:
       timestamp:
         description: 'Patch Timestamp (UTC)'
-        required: true
+        required: false
       baseline_gcc_hash:
         description: 'Baseline hash'
         required: false
@@ -74,7 +74,7 @@ jobs:
       - name: Get timestamps and make directories
         if: ${{ inputs.timestamp == '' }}
         run: |
-          if [ "${{ github.workflow }}" == "Staging" ] && [ "${{ github.event_name }}" == "schedule" ]; then
+          if [ "${{ github.workflow }}" == "Staging" ]; then
             python scripts/create_timestamp_files.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Staging
           else
             python scripts/create_timestamp_files.py -token ${{ secrets.GITHUB_TOKEN }} -rid ${{ github.run_id }} -repo ewlu/gcc-precommit-ci -workflow Patchworks
