@@ -45,11 +45,7 @@ jobs:
       - name: Check if artifact was found
         id: continue
         run: |
-          if ( test -f result/downtime_runner_success ); then
-            unzip result/downtime_runner_success
-            ls
-            unzip end_date.zip
-            ls
+          if ( test -f result/end_date.txt ); then
             START_DATE=$(cat end_date.txt)
             echo "start_date=$START_DATE" >> $GITHUB_OUTPUT
           fi
