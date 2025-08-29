@@ -216,10 +216,10 @@ jobs:
           free_up_space: false
 
       - name: Restore submodules from cache
-        uses: actions/download-artifact@v4
-        with:
-          name: gcc-sources-${{ inputs.baseline_hash }}
-          path: ./riscv-gnu-toolchain
+        run: |
+          gh run download --repo ${{ github.repository }} "${{ github.run_id }}" --name "gcc-sources-${{ inputs.baseline_hash }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Restore submodules
         run: |
