@@ -46,7 +46,7 @@ jobs:
         id: continue
         run: |
           if ( test -f result/end_date.txt ); then
-            START_DATE=$(cat end_date.txt)
+            START_DATE=$(cat result/end_date.txt)
             echo "start_date=$START_DATE" >> $GITHUB_OUTPUT
           fi
 
