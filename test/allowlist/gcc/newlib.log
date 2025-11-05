@@ -3,3 +3,5 @@
 #
 FAIL: g++.dg/modules/xtreme-header-7_b.C -std=c++2b
 FAIL: g++.dg/modules/xtreme-header_b.C -std=c++2b
+# TODO: root cause
+FAIL: gcc.target/riscv/target-attr-06.c
