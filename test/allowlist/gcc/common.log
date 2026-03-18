@@ -87,3 +87,10 @@ FAIL: gcc.dg/sarif-output/missing-semicolon.c (test .sarif output for UTF-8-enco
 FAIL: gcc.dg/sarif-output/multiple-outputs.c (test .sarif output for UTF-8-encoded parseable JSON)
 FAIL: gcc.dg/sarif-output/no-diagnostics.c (test .sarif output for UTF-8-encoded parseable JSON)
 FAIL: gcc.dg/sarif-output/werror.c (test .sarif output for UTF-8-encoded parseable JSON)
+
+
+#
+# TODO: Root cause & file bugzilla
+#
+FAIL: gcc.misc-tests/gcov-pr86536.c 
+FAIL: gcc.misc-tests/gcov-pr86536.c
