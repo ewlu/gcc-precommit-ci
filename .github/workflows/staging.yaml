@@ -14,7 +14,7 @@ on:
     inputs:
       timestamp:
         description: 'Patch Timestamp (UTC)'
-        required: true
+        required: false
       baseline_gcc_hash:
         description: 'Baseline hash'
         required: false
